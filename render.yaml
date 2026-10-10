@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: nanoq-holdem
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
