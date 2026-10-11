@@ -61,15 +61,54 @@ function best(cards){let bs=null,bc=null;const n=cards.length;
   return{score:bs,cards:bc}}
 function handName(s){if(s[0]===8&&s[1]===12)return'Royal flush';return HAND_NAMES[s[0]]}
 
+/* fast evaluator for 1-7 cards: one comparable number, category in the top bits */
+function straightHigh(m){
+  const w=(m<<1)|((m>>12)&1);// bit 0 is the ace played low, bit r+1 is rank r
+  for(let hi=13;hi>=4;hi--){const need=0x1f<<(hi-4);if((w&need)===need)return hi-1}
+  return -1}
+function eval7(cs){
+  const rc=new Array(13).fill(0),sc=[0,0,0,0],sm=[0,0,0,0];let mask=0;
+  for(const c of cs){const r=c%13,s=(c/13)|0;rc[r]++;sc[s]++;sm[s]|=1<<r;mask|=1<<r}
+  const pack=(cat,ks)=>{let v=cat;for(let i=0;i<5;i++)v=v*16+(ks[i]??0);return v};
+  const top=(m,n,skip=-1)=>{const o=[];for(let r=12;r>=0&&o.length<n;r--)if(m>>r&1&&r!==skip)o.push(r);return o};
+  for(let s=0;s<4;s++)if(sc[s]>=5){const sf=straightHigh(sm[s]);if(sf>=0)return pack(8,[sf]);return pack(5,top(sm[s],5))}
+  let quad=-1,trips=[],pairs=[];
+  for(let r=12;r>=0;r--){if(rc[r]===4)quad=r;else if(rc[r]===3)trips.push(r);else if(rc[r]===2)pairs.push(r)}
+  if(quad>=0)return pack(7,[quad,top(mask,1,quad)[0]]);
+  if(trips.length&&(trips.length>1||pairs.length)){const t=trips[0],p=Math.max(trips[1]??-1,pairs[0]??-1);return pack(6,[t,p])}
+  const st=straightHigh(mask);if(st>=0)return pack(4,[st]);
+  if(trips.length){const t=trips[0];return pack(3,[t,...top(mask&~(1<<t),2)])}
+  if(pairs.length>=2){const a=pairs[0],b=pairs[1];return pack(2,[a,b,...top(mask&~(1<<a)&~(1<<b),1)])}
+  if(pairs.length){const a=pairs[0];return pack(1,[a,...top(mask&~(1<<a),3)])}
+  return pack(0,top(mask,5))}
+const catOf=v=>Math.floor(v/1048576);
+
+/* chance to win for every open hand; exact when at most two cards are to come, sampled otherwise */
+function equity(holes,board,dead=[]){
+  const seats=Object.keys(holes).map(Number);
+  const used=new Set([...board,...dead,...seats.flatMap(i=>holes[i])]);
+  const deck=[...Array(52).keys()].filter(c=>!used.has(c));
+  const need=5-board.length,win={},tie={};seats.forEach(i=>{win[i]=0;tie[i]=0});let n=0;
+  const score=b=>{let bestV=-1,ws=[];for(const i of seats){const v=eval7([...holes[i],...b]);if(v>bestV){bestV=v;ws=[i]}else if(v===bestV)ws.push(i)}
+    if(ws.length===1)win[ws[0]]++;else ws.forEach(i=>tie[i]+=1/ws.length);n++};
+  if(need<=0)score(board);
+  else if(need===1)deck.forEach(a=>score([...board,a]));
+  else if(need===2){for(let a=0;a<deck.length;a++)for(let b=a+1;b<deck.length;b++)score([...board,deck[a],deck[b]])}
+  else{const d=deck.slice(),SAMPLES=Math.max(2500,Math.round(18000/seats.length));for(let k=0;k<SAMPLES;k++){for(let j=0;j<need;j++){const r=j+Math.floor(Math.random()*(d.length-j));[d[j],d[r]]=[d[r],d[j]]}score([...board,...d.slice(0,need)])}}
+  return Object.fromEntries(seats.map(i=>[i,{w:Math.round(win[i]/n*1000)/10,t:Math.round(tie[i]/n*1000)/10}]))}
+const SUITS=['♠','♥','♦','♣'];
+const cardTxt=c=>(RANKS[c%13]==='T'?'10':RANKS[c%13])+SUITS[Math.floor(c/13)];
+
 /* ---------- game rules ---------- */
 const BETTING=['preflop','flop','turn','river'];
 function emptyState(){return{v:0,seats:Array(N).fill(null),sb:10,bb:20,stack:1000,dealer:-1,hand:null,log:[],paused:false,requests:{},leader:null,
   rit:true,      // players may vote to run it twice when everyone is all-in
   jpRoyal:5000,  // the house pays this extra to whoever shows down a royal flush
   jp72:100,      // every other player pays this to whoever wins a pot holding 7-2
-  stats:{}}}
+  stats:{},
+  ledger:{}}}      // per player: chips bought in and chips taken away when leaving
 function norm(s){if(!Array.isArray(s.seats))s.seats=[];while(s.seats.length<N)s.seats.push(null);s.log=s.log||[];s.requests=s.requests||{};
-  if(s.rit===undefined)s.rit=true;if(s.jpRoyal===undefined)s.jpRoyal=5000;if(s.jp72===undefined)s.jp72=100;s.stats=s.stats||{};return s}
+  if(s.rit===undefined)s.rit=true;if(s.jpRoyal===undefined)s.jpRoyal=5000;if(s.jp72===undefined)s.jp72=100;s.stats=s.stats||{};s.ledger=s.ledger||{};return s}
 const nick=(s,i)=>s.seats[i]?.nick||'Spiller';
 function log(s,m){s.log.push(m);if(s.log.length>50)s.log=s.log.slice(-50)}
 const eligible=p=>p&&!p.leaving&&p.chips>0;
@@ -79,9 +118,12 @@ function nextIdx(s,from,pred){for(let k=1;k<=N;k++){const i=((from+k)%N+N)%N;if(
 function put(p,amt){amt=Math.min(amt,p.chips);p.chips-=amt;p.bet+=amt;p.total+=amt;if(p.chips===0)p.allin=true;return amt}
 const is72=cards=>{const r=dec(cards).map(c=>c%13).sort((a,b)=>a-b);return r.length===2&&r[0]===0&&r[1]===5};
 function stat(s,uid){return s.stats[uid]||(s.stats[uid]={won:0,biggest:0,royal:0,b72:0})}
+function ledger(s,p){const L=s.ledger||(s.ledger={});const l=L[p.uid]||(L[p.uid]={nick:p.nick,seat:-1,in:0,cash:0});l.nick=p.nick;return l}
+function buyIn(s,p,amt,seat){const l=ledger(s,p);l.in+=amt;if(seat!=null)l.seat=seat}
+function cashOut(s,p){ledger(s,p).cash+=p.chips}
 
 function startHand(s){
-  s.seats=s.seats.map(p=>p&&p.leaving?null:p);
+  s.seats=s.seats.map(p=>{if(p&&p.leaving){cashOut(s,p);return null}return p});
   const players=s.seats.map((p,i)=>eligible(p)?i:-1).filter(i=>i>=0);
   if(players.length<2)return false;
   s.seats.forEach(p=>{if(p)Object.assign(p,{inHand:false,bet:0,total:0,folded:false,allin:false,acted:false,hole:''})});
@@ -98,7 +140,7 @@ function startHand(s){
   const bbSeat=nextIdx(s,sbSeat,p=>p?.inHand);
   put(s.seats[sbSeat],s.sb);put(s.seats[bbSeat],s.bb);
   s.hand={id:Math.random().toString(36).slice(2,10),phase:'preflop',board:[],bd:enc(board),rest:enc(deck.slice(k+5)),
-    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0};
+    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{}};
   log(s,`Hånd #${s.hand.no}: ${nick(s,dealer)} giver. Blinds ${nick(s,sbSeat)} ${s.sb} / ${nick(s,bbSeat)} ${s.bb}.`);
   s.hand.toAct=bbSeat;
   advance(s,bbSeat);
@@ -116,9 +158,14 @@ function advance(s,from){
     h.turnAt=Date.now();return;
   }
   s.seats.forEach(p=>{if(p){p.bet=0;p.acted=false}});
-  h.curBet=0;h.minRaise=s.bb;
+  h.curBet=0;h.minRaise=s.bb;h.fracs={};
   // nobody can bet any more and cards are still to come: the table may vote to run it twice
   const bettingOver=s.seats.filter(canAct).length<2;
+  if(bettingOver&&h.phase!=='river'&&!h.open){
+    // all-in: the hands are turned face up, TV style, with the chance to win
+    h.open=Object.fromEntries(L.map(i=>[i,dec(s.seats[i].hole)]));
+    h.eqs=[{n:h.board.length,eq:equity(h.open,h.board)}];
+  }
   if(bettingOver&&h.phase!=='river'&&s.rit&&!h.ritDone){
     h.prevPhase=h.phase;h.phase='rit';h.toAct=-1;h.ritVotes={};h.ritAt=Date.now();h.ritSeats=L;
     log(s,'Alle er all-in. Skal kortene deles én eller to gange?');
@@ -130,12 +177,18 @@ function advance(s,from){
 /* deal the next street, or run the board out when betting is over */
 function dealOn(s){
   const h=s.hand;const board=dec(h.bd);let streets=0;
+  // running the board out: odds for each street the table is about to see
+  if(h.open&&!h.eqDone&&s.seats.filter(canAct).length<2){h.eqDone=true;
+    const n0=h.board.length;
+    for(const n of [3,4,5])if(n>n0)h.eqs.push({n,eq:equity(h.open,board.slice(0,n))});
+    if(h.twice){const b2=dec(h.bd2);h.eqs2=[{n:n0,eq:h.eqs[0].eq}];for(const n of [3,4,5])if(n>n0)h.eqs2.push({n,eq:equity(h.open,b2.slice(0,n),board.slice(n0))})}
+  }
   while(true){
     if(h.phase==='preflop'){h.phase='flop';h.board=board.slice(0,3)}
     else if(h.phase==='flop'){h.phase='turn';h.board=board.slice(0,4)}
     else if(h.phase==='turn'){h.phase='river';h.board=board.slice(0,5)}
     else {h.extraWait=Math.max(0,streets-1)*1.8+(h.twice?streets*1.8+1:0);showdown(s);return}
-    streets++;
+    streets++;h.fracs={};
     s.seats.forEach(p=>{if(p){p.bet=0;p.acted=false}});
     const act=s.seats.filter(canAct).length;
     if(act>=2){h.toAct=nextIdx(s,s.dealer,canAct);h.turnAt=Date.now();return}
@@ -241,10 +294,24 @@ function pay72(s,seats){
   });
 }
 
+/* after folding, or once the hand is over, a player may turn one or both cards face up */
+function show(s,seat,which){
+  const h=s.hand,p=s.seats[seat];
+  if(!h||!p||!p.inHand)return'Du har ingen kort at vise.';
+  if(!(p.folded||h.phase==='showdown'))return'Du kan vise dine kort, når du har foldet, eller når hånden er slut.';
+  const hole=dec(p.hole);if(hole.length<2)return'Du har ingen kort at vise.';
+  const pick=which==='a'?[hole[0]]:which==='b'?[hole[1]]:hole;
+  const cur=new Set(h.shows[seat]||[]);const fresh=pick.filter(c=>!cur.has(c));
+  if(!fresh.length)return'De kort er allerede vist.';
+  fresh.forEach(c=>cur.add(c));h.shows[seat]=hole.filter(c=>cur.has(c));h.showAt=Date.now();
+  log(s,`${p.nick} viser ${fresh.map(cardTxt).join(' ')}.`);
+}
+
 function act(s,seat,kind,to){
   const h=s.hand,p=s.seats[seat];
   if(!h||!BETTING.includes(h.phase)||h.toAct!==seat||!canAct(p))return false;
   const toCall=h.curBet-p.bet;
+  const potNow=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
   if(kind==='fold'){p.folded=true;log(s,`${p.nick} folder.`)}
   else if(kind==='check'){if(toCall>0)return false;log(s,`${p.nick} checker.`)}
   else if(kind==='call'){if(toCall<=0)return false;const a=put(p,toCall);log(s,`${p.nick} ${p.allin?'går all-in med':'synker'} ${fmt(a)}.`)}
@@ -253,6 +320,7 @@ function act(s,seat,kind,to){
     if(to<=h.curBet)return false;
     if(to<h.curBet+h.minRaise&&to<max)return false;
     const size=to-h.curBet;
+    if(potNow+toCall>0)h.fracs[seat]=Math.round(size/(potNow+toCall)*100)/100;
     if(size>=h.minRaise){h.minRaise=size;s.seats.forEach((q,i)=>{if(i!==seat&&canAct(q))q.acted=false})}
     h.curBet=to;put(p,to-p.bet);
     log(s,`${p.nick} ${p.allin?'går all-in til':(toCall>0?'hæver til':'byder')} ${fmt(to)}.`);
@@ -264,4 +332,4 @@ function act(s,seat,kind,to){
   return true;
 }
 
-module.exports={RIT_MS,N,NEXT_HAND_MS,TURN_MS,CHARS,BETTING,fmt,emptyState,norm,log,eligible,live,canAct,startHand,advance,act,award,vote,resolveRit};
+module.exports={eval7,equity,show,buyIn,cashOut,RIT_MS,N,NEXT_HAND_MS,TURN_MS,CHARS,BETTING,fmt,emptyState,norm,log,eligible,live,canAct,startHand,advance,act,award,vote,resolveRit};

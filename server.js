@@ -57,11 +57,12 @@ function viewFor(room, pid) {
 function broadcast(room) {
   room.s.v = (room.s.v || 0) + 1;
   room.touched = Date.now();
+  schedule(room); // sets the next-hand countdown, which every player sees
   for (const [, sock] of io.of('/').sockets) {
     if (sock.data.code === room.code) sock.emit('state', viewFor(room, sock.data.pid));
   }
-  schedule(room);
 }
+const AUTO_MS = 5000; // countdown before the automatic dealer starts a hand
 
 /* Server-side clocks: next hand after a showdown, and a turn timer so nobody can stall. */
 function schedule(room) {
@@ -75,12 +76,22 @@ function schedule(room) {
       G.resolveRit(room.s, false); broadcast(room);
     }, Math.max(0, h.ritAt + G.RIT_MS - Date.now()));
   }
-  if (h && h.phase === 'showdown' && !s.paused) {
-    const wait = G.NEXT_HAND_MS + (h.extraWait || 0) * 1000 - (Date.now() - (h.finishedAt || Date.now()));
+  // the dealer is automatic: whenever two players have chips and no hand is running, a hand starts after a countdown
+  const ready = !s.paused && s.seats.filter(G.eligible).length >= 2 && (!h || h.phase === 'showdown');
+  if (ready) {
+    const key = h?.id || 'none';
+    const base = h ? (h.finishedAt || Date.now()) + G.NEXT_HAND_MS + (h.extraWait || 0) * 1000 : 0;
+    // keep a countdown that is already running; otherwise start a fresh one
+    const at = room.nextAt && room.nextKey === key ? Math.max(room.nextAt, Date.now() + 800) : Math.max(base, Date.now() + AUTO_MS);
+    room.nextAt = at; room.nextKey = key;
+    s.nextAt = at;
     room.timers.next = setTimeout(() => {
-      if (room.s.hand?.id === h.id && room.s.hand.phase === 'showdown' && !room.s.paused && G.startHand(room.s)) broadcast(room);
-    }, Math.max(1000, wait));
-  }
+      const g = room.s.hand;
+      if (room.s.paused || (g && g.phase !== 'showdown')) return;
+      room.nextAt = 0;
+      if (G.startHand(room.s)) broadcast(room);
+    }, Math.max(0, at - Date.now()));
+  } else { room.nextAt = 0; s.nextAt = 0; }
   if (h && BETTING.includes(h.phase) && h.toAct >= 0) {
     const id = h.id, ta = h.toAct, at = h.turnAt;
     room.timers.turn = setTimeout(() => {
@@ -103,7 +114,7 @@ function standUp(s, i, why) {
       if (h.toAct === i) G.act(s, i, 'fold', 0);
       else { p.folded = true; p.acted = true; if (s.seats.filter(G.live).length === 1) G.advance(s, i); }
     }
-  } else s.seats[i] = null;
+  } else { G.cashOut(s, p); s.seats[i] = null; }
   G.log(s, why);
 }
 
@@ -124,12 +135,18 @@ function handle(room, pid, isLeader, m) {
       }
       if (i < 0) return 'Bordet er fyldt.';
       s.seats[i] = { uid: pid, nick, chips: s.stack, rebuys: 0, inHand: false, bet: 0, total: 0, folded: false, allin: false, acted: false, hole: [], joinedAt: Date.now() };
+      G.buyIn(s, s.seats[i], s.stack, i);
       G.log(s, `${nick} sætter sig som ${G.CHARS[i].name}: “${G.CHARS[i].sit}”`);
       return;
     }
     case 'act': {
       if (!p || !h || h.id !== m.handId) return 'Hånden er allerede gået videre.';
       if (!G.act(s, me, m.kind, Number(m.to) || 0)) return 'Det træk er ikke tilladt lige nu.';
+      return;
+    }
+    case 'show': {
+      const err = G.show(s, me, m.which);
+      if (err) return err;
       return;
     }
     case 'rit': {
@@ -153,7 +170,7 @@ function handle(room, pid, isLeader, m) {
     }
     case 'rebuy': {
       if (!isLeader || !p || p.chips > 0) return 'Kun lederen kan købe ind direkte.';
-      p.chips = s.stack; p.rebuys = (p.rebuys || 0) + 1;
+      p.chips = s.stack; p.rebuys = (p.rebuys || 0) + 1; G.buyIn(s, p, s.stack);
       G.log(s, `Lederen ${p.nick} køber selv ind igen for ${G.fmt(s.stack)} chips.`);
       return;
     }
@@ -188,12 +205,12 @@ function handle(room, pid, isLeader, m) {
       const i = int(m.seat), q = s.seats[i];
       if (!q || q.uid !== m.uid) return 'Spilleren er ikke ved bordet længere.';
       const amt = int(m.amount);
-      if (m.kind === 'add') { if (!(amt > 0)) return 'Skriv et beløb.'; q.chips += amt; G.log(s, `Lederen gav ${q.nick} ${G.fmt(amt)} chips.`); }
-      else if (m.kind === 'sub') { if (!(amt > 0)) return 'Skriv et beløb.'; const a = Math.min(amt, q.chips); q.chips -= a; G.log(s, `Lederen tog ${G.fmt(a)} chips fra ${q.nick}.`); }
-      else if (m.kind === 'setc') { if (!(amt >= 0)) return 'Skriv et beløb.'; q.chips = amt; G.log(s, `Lederen satte ${q.nick} til ${G.fmt(amt)} chips.`); }
+      if (m.kind === 'add') { if (!(amt > 0)) return 'Skriv et beløb.'; q.chips += amt; G.buyIn(s, q, amt); G.log(s, `Lederen gav ${q.nick} ${G.fmt(amt)} chips.`); }
+      else if (m.kind === 'sub') { if (!(amt > 0)) return 'Skriv et beløb.'; const a = Math.min(amt, q.chips); q.chips -= a; G.buyIn(s, q, -a); G.log(s, `Lederen tog ${G.fmt(a)} chips fra ${q.nick}.`); }
+      else if (m.kind === 'setc') { if (!(amt >= 0)) return 'Skriv et beløb.'; G.buyIn(s, q, amt - q.chips); q.chips = amt; G.log(s, `Lederen satte ${q.nick} til ${G.fmt(amt)} chips.`); }
       else if (m.kind === 'grant') {
         const r = s.requests[q.uid]; if (!r) return 'Anmodningen er væk.';
-        const a = Math.floor(r.amount || s.stack); q.chips += a; q.rebuys = (q.rebuys || 0) + 1; delete s.requests[q.uid];
+        const a = Math.floor(r.amount || s.stack); q.chips += a; G.buyIn(s, q, a); q.rebuys = (q.rebuys || 0) + 1; delete s.requests[q.uid];
         G.log(s, `Lederen sagde ok. ${q.nick} køber ind igen for ${G.fmt(a)} chips (genkøb nr. ${q.rebuys}).`);
       }
       else if (m.kind === 'deny') { delete s.requests[q.uid]; G.log(s, `Lederen afviste ${q.nick}s ønske om chips.`); }
@@ -220,16 +237,21 @@ io.on('connection', (sock) => {
     ack?.({ pid: sock.data.pid });
     sock.emit('state', viewFor(room, sock.data.pid));
   });
-  const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemasking!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡'];
+  const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemasking!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
+    'Er du bange?', 'Fold nu bare', 'Jeg lugter bluff', 'Sikke en torsk 🐟', 'Tag dig sammen', 'Det var dumt', 'Hurtigere, bedstemor!', 'Nice hand… NOT', 'Kom så!', 'GG'];
+  const THROWS = ['torsk', 'snebold', 'tupilak', 'isklump', 'kaffe'];
   let lastReact = 0;
   sock.on('react', (m) => {
     const d = sock.data || {}, room = rooms.get(d.code);
     if (!room || Date.now() - lastReact < 1200) return;
     const seat = room.s.seats.findIndex((p) => p?.uid === d.pid);
-    const text = REACTS[int(m?.i)];
-    if (seat < 0 || !text) return;
+    const to = int(m?.to), hasTo = to >= 0 && to < G.N && room.s.seats[to] && to !== seat;
+    const thr = m?.t != null ? THROWS[int(m.t)] : null;
+    const text = thr ? null : REACTS[int(m?.i)];
+    if (seat < 0 || (!text && !thr) || (thr && !hasTo)) return;
     lastReact = Date.now();
-    for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code) so.emit('react', { seat, text, at: Date.now() });
+    const msg = { seat, text, at: Date.now(), to: hasTo ? to : -1, throw: thr };
+    for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code) so.emit('react', msg);
   });
   sock.on('do', (m, ack) => {
     const d = sock.data || {}, room = rooms.get(d.code);
