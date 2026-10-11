@@ -49,7 +49,7 @@ function viewFor(room, pid) {
     if (p.uid !== pid) p.hole = [];
     return p;
   });
-  if (s.hand) delete s.hand.bd;
+  if (s.hand) { delete s.hand.bd; delete s.hand.rest; delete s.hand.bd2; }
   s.now = Date.now();
   s.code = room.code;
   return s;
@@ -66,11 +66,20 @@ function broadcast(room) {
 /* Server-side clocks: next hand after a showdown, and a turn timer so nobody can stall. */
 function schedule(room) {
   const s = room.s, h = s.hand;
-  clearTimeout(room.timers.next); clearTimeout(room.timers.turn);
+  clearTimeout(room.timers.next); clearTimeout(room.timers.turn); clearTimeout(room.timers.rit);
+  if (h && h.phase === 'rit') {
+    const id = h.id;
+    room.timers.rit = setTimeout(() => {
+      if (room.s.hand?.id !== id || room.s.hand.phase !== 'rit') return;
+      G.log(room.s, 'Tiden løb ud – kortene deles én gang.');
+      G.resolveRit(room.s, false); broadcast(room);
+    }, Math.max(0, h.ritAt + G.RIT_MS - Date.now()));
+  }
   if (h && h.phase === 'showdown' && !s.paused) {
+    const wait = G.NEXT_HAND_MS + (h.extraWait || 0) * 1000 - (Date.now() - (h.finishedAt || Date.now()));
     room.timers.next = setTimeout(() => {
       if (room.s.hand?.id === h.id && room.s.hand.phase === 'showdown' && !room.s.paused && G.startHand(room.s)) broadcast(room);
-    }, G.NEXT_HAND_MS);
+    }, Math.max(1000, wait));
   }
   if (h && BETTING.includes(h.phase) && h.toAct >= 0) {
     const id = h.id, ta = h.toAct, at = h.turnAt;
@@ -123,6 +132,10 @@ function handle(room, pid, isLeader, m) {
       if (!G.act(s, me, m.kind, Number(m.to) || 0)) return 'Det træk er ikke tilladt lige nu.';
       return;
     }
+    case 'rit': {
+      if (!p || !G.vote(s, me, !!m.yes)) return 'Du kan ikke stemme lige nu.';
+      return;
+    }
     case 'deal': {
       if (!p) return 'Sæt dig først.';
       if (s.paused) return 'Spillet er på pause.';
@@ -157,15 +170,16 @@ function handle(room, pid, isLeader, m) {
     }
     case 'settings': {
       if (!isLeader) return 'Kun lederen kan ændre blinds.';
-      const sb = int(m.sb), bb = int(m.bb), st = int(m.stack);
+      const sb = int(m.sb), bb = int(m.bb), st = int(m.stack), jr = int(m.jpRoyal), j72 = int(m.jp72);
       if (!(sb > 0 && bb >= sb && st >= bb && st <= 1e9)) return 'Stor blind skal være mindst lille blind, og startchips mindst stor blind.';
-      Object.assign(s, { sb, bb, stack: st });
-      G.log(s, `Lederen satte blinds til ${sb}/${bb} og startchips til ${G.fmt(st)}.`);
+      if (!(jr >= 0 && jr <= 1e9 && j72 >= 0 && j72 <= 1e9)) return 'Jackpot-beløbene skal være 0 eller mere.';
+      Object.assign(s, { sb, bb, stack: st, jpRoyal: jr, jp72: j72, rit: !!m.rit });
+      G.log(s, `Lederen satte blinds ${sb}/${bb}, startchips ${G.fmt(st)}, Royal flush-jackpot ${G.fmt(jr)}, 7-2-bonus ${G.fmt(j72)} pr. spiller, run it twice ${m.rit ? 'til' : 'fra'}.`);
       return;
     }
     case 'reset': {
       if (!isLeader) return 'Kun lederen kan nulstille bordet.';
-      const f = G.emptyState(); f.leader = s.leader; f.log = ['Bordet blev nulstillet.'];
+      const f = G.emptyState(); f.leader = s.leader; f.log = ['Bordet blev nulstillet.']; Object.assign(f, { sb: s.sb, bb: s.bb, stack: s.stack, jpRoyal: s.jpRoyal, jp72: s.jp72, rit: s.rit });
       room.s = f;
       return;
     }
@@ -205,6 +219,17 @@ io.on('connection', (sock) => {
     sock.data = { code, token, pid: pidFor(room, token) };
     ack?.({ pid: sock.data.pid });
     sock.emit('state', viewFor(room, sock.data.pid));
+  });
+  const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemasking!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡'];
+  let lastReact = 0;
+  sock.on('react', (m) => {
+    const d = sock.data || {}, room = rooms.get(d.code);
+    if (!room || Date.now() - lastReact < 1200) return;
+    const seat = room.s.seats.findIndex((p) => p?.uid === d.pid);
+    const text = REACTS[int(m?.i)];
+    if (seat < 0 || !text) return;
+    lastReact = Date.now();
+    for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code) so.emit('react', { seat, text, at: Date.now() });
   });
   sock.on('do', (m, ack) => {
     const d = sock.data || {}, room = rooms.get(d.code);

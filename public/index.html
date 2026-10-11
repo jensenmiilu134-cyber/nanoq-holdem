@@ -131,7 +131,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--aurora);outline
 .banner span{display:block;font-family:var(--f-label);font-weight:600;font-size:13px;letter-spacing:.14em;color:var(--aurora);margin-top:4px}
 
 /* cards */
-.stage{--cw:clamp(30px,4.4vw,52px)}
+.stage{--cw:clamp(40px,5.8vw,74px)}
 .card{width:var(--cw);height:calc(var(--cw) * 1.4);border-radius:calc(var(--cw) * .1);background:linear-gradient(155deg,#fffefb 0%,#f6f2ea 60%,#ebe5d8 100%);color:#151a22;position:relative;box-shadow:0 1px 0 #d8d0c0,0 2px 3px rgba(0,0,0,.35),0 8px 16px rgba(0,0,0,.3);flex:none;font-family:"Barlow Condensed",var(--f-body);font-weight:700;overflow:hidden}
 .card::before{content:"";position:absolute;inset:4%;border-radius:calc(var(--cw) * .06);border:1px solid rgba(0,0,0,.06)}
 .card.red{color:#c41230}
@@ -161,11 +161,43 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--aurora);outline
 @keyframes boardIn{0%{transform:translate(calc(-80px - var(--i) * 58px),-6px) rotate(-10deg);opacity:0}15%{opacity:1}100%{transform:none;opacity:1}}
 @keyframes muck{0%{transform:none;opacity:1}100%{transform:translate(calc(var(--fx,0) * .55),calc(var(--fy,0) * .55)) rotate(160deg) scale(.45);opacity:0}}
 @keyframes winLift{0%{transform:none}60%{transform:translateY(-12px) scale(1.08)}100%{transform:translateY(-7px) scale(1.04)}}
-.cw.deal{animation:flyIn .6s cubic-bezier(.2,.75,.25,1) var(--dl) both}
-.cw.deal.mine .cin{animation:flipUp .55s cubic-bezier(.3,.7,.3,1) calc(var(--dl) + .55s) both}
-.cw.reveal .cin{animation:flipUp .6s cubic-bezier(.3,.7,.3,1) var(--dl) both}
-.cw.board{animation:boardIn .5s cubic-bezier(.2,.8,.2,1) var(--dl) both}
-.cw.board .cin{animation:flipUp .5s cubic-bezier(.3,.7,.3,1) calc(var(--dl) + .4s) both}
+.cw.deal{animation:flyIn .9s cubic-bezier(.2,.75,.25,1) var(--dl) both}
+.cw.deal.mine .cin{animation:flipUp .75s cubic-bezier(.3,.7,.3,1) calc(var(--dl) + .9s) both}
+.cw.reveal .cin{animation:flipUp .8s cubic-bezier(.3,.7,.3,1) var(--dl) both}
+.cw.board{animation:boardIn .7s cubic-bezier(.2,.8,.2,1) var(--dl) both}
+.cw.board .cin{animation:flipUp .7s cubic-bezier(.3,.7,.3,1) calc(var(--dl) + .55s) both}
+.board{position:relative}
+.board .runlbl{display:none;position:absolute;left:calc(var(--cw) * -.7);top:50%;transform:translateY(-50%);font-style:normal;font-family:var(--f-display);font-weight:900;font-size:calc(var(--cw) * .4);color:var(--bone);opacity:.8}
+.board.b2{display:none}
+.center.two .board.b2{display:flex}
+.center.two .board .runlbl{display:block}
+.center.two .board{--cw:clamp(32px,4.6vw,58px)}
+.rit-banner{color:var(--aurora)}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.jackpot{position:fixed;inset:0;z-index:55;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .4s}
+.jackpot.on{opacity:1}
+.jackpot::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,210,63,.35),rgba(5,10,21,.75) 60%)}
+.jackpot.b72::before{background:radial-gradient(circle at 50% 45%,rgba(212,18,47,.45),rgba(5,10,21,.75) 60%)}
+.jp-inner{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;transform:scale(.6) rotate(-6deg);transition:transform .6s cubic-bezier(.2,1.6,.4,1)}
+.jackpot.on .jp-inner{transform:none}
+.jp-inner small{font-family:var(--f-label);letter-spacing:.3em;text-transform:uppercase;color:var(--snow);font-size:14px}
+.jp-inner b{font-family:var(--f-display);font-weight:900;font-size:clamp(56px,13vw,150px);line-height:.85;text-transform:uppercase;background:linear-gradient(180deg,#fff7c2,#ffd23f 50%,#c98a0a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 0 #6b3d00) drop-shadow(0 0 40px rgba(255,210,63,.6));animation:jpPulse .9s ease-in-out infinite}
+.jackpot.b72 .jp-inner b{background:linear-gradient(180deg,#fff,#ff8a9a 45%,#d4122f);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 6px 0 #4a0712) drop-shadow(0 0 40px rgba(212,18,47,.6))}
+.jp-inner span{font-size:clamp(16px,2.4vw,22px);font-weight:700;color:var(--snow);background:rgba(5,10,21,.7);padding:6px 14px;border-radius:999px}
+@keyframes jpPulse{50%{transform:scale(1.06) rotate(-1deg)}}
+.bubble.react{background:var(--aurora);color:var(--night);font-size:18px}
+.reacts{display:flex;gap:6px;flex-wrap:wrap}
+.reacts button{background:rgba(5,10,21,.6);border:1px solid var(--line);color:var(--ice);border-radius:999px;padding:6px 10px;font-size:14px;font-weight:600;transition:transform .12s}
+.reacts button:hover{transform:translateY(-2px) scale(1.06);border-color:var(--aurora)}
+.jp-pill{background:linear-gradient(90deg,rgba(255,210,63,.18),rgba(212,18,47,.18));border-color:rgba(255,210,63,.5)}
+.jp-pill b{color:#ffd23f}
+.rit-box{display:flex;flex-direction:column;gap:10px}
+.rit-box .row .btn{flex:1}
+.lead-toggles{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.switch{display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer}
+.switch input{width:20px;height:20px;accent-color:var(--aurora)}
+@media (max-width:700px){.stage{--cw:clamp(34px,10vw,46px)}.center.two .board{--cw:clamp(28px,8vw,38px)}}
+
 .cw.muck{animation:muck .5s cubic-bezier(.5,0,.75,0) both;pointer-events:none}
 .cw.lift{animation:winLift .6s ease-out both}
 .seat.me .hand .cw:not(.muck){transition:transform .2s}
@@ -181,7 +213,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--aurora);outline
 
 /* seats */
 .seat{position:absolute;transform:translate(-50%,-50%) scale(var(--s,1));width:clamp(96px,13vw,150px);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:2}
-.seat .hand{display:flex;gap:3px;height:calc(var(--cw) * 1.1);--cw:clamp(26px,3.4vw,40px)}
+.seat .hand{display:flex;gap:3px;height:calc(var(--cw) * 1.1);--cw:clamp(34px,4.6vw,58px)}
 .seat .hand .cw{height:calc(var(--cw) * 1.4)}
 .plate{width:100%;box-sizing:border-box;padding:6px 8px 7px;border-radius:12px;background:var(--panel);border:1px solid var(--line);text-align:center;position:relative}
 .plate .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -278,6 +310,15 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 @media (prefers-reduced-motion:reduce){.bubble{animation:none}.av svg,.seat.turn .av svg,.seat.winner .av svg{animation:none}}
 
 /* landing */
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%;max-width:1040px;text-align:left}
+.rule{padding:18px;border-radius:16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);background:rgba(8,18,32,.6);position:relative;overflow:hidden;min-width:0}
+.rule b{font-family:var(--f-display);font-weight:900;font-size:26px;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.rule span{color:var(--muted);line-height:1.45}
+.rule.royal{border-color:rgba(255,210,63,.45)}.rule.royal b{color:#ffd23f}
+.rule.r72{border-color:rgba(212,18,47,.55)}.rule.r72 b{color:#ff6b7f}
+.rule.rit b{color:var(--aurora)}
+.rule::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%)}
+@media (max-width:640px){.rules{grid-template-columns:1fr}}
 .landing{display:none;flex-direction:column;align-items:center;gap:clamp(28px,5vw,48px);padding-block:clamp(16px,5vh,56px) 24px;text-align:center}
 .on-landing .landing{display:flex}
 .on-landing .stage,.on-landing #dock,.on-landing #logBox,.on-landing #leadPanel,.on-landing .top,.on-landing .foot{display:none!important}
@@ -382,6 +423,11 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
       <li><b>Send linket</b><span>Vennerne åbner det på telefon eller computer. Ingen konto.</span></li>
       <li><b>Vælg karakter og spil</b><span>Kortene deles af serveren, så ingen kan kigge i dine kort.</span></li>
     </ol>
+    <div class="rules">
+      <div class="rule royal"><b>Royal flush-jackpot</b><span>Vis en royal flush, og banken betaler ekstra oveni puljen. Lederen bestemmer beløbet.</span></div>
+      <div class="rule r72"><b>7-2-bonus</b><span>Vind en pulje med verdens dårligste hånd, og alle ved bordet betaler dig. Lederen bestemmer hvor meget.</span></div>
+      <div class="rule rit"><b>Run it twice</b><span>Er alle all-in, kan I stemme om at dele resten af kortene to gange og dele puljen.</span></div>
+    </div>
     <p class="fine">Kun fiktive chips. Malkemasking WILL get you.</p>
   </section>
 
@@ -424,6 +470,7 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
   </main>
 
   <section class="dock" id="dock" aria-live="polite"></section>
+  <div class="reacts" id="reacts" hidden aria-label="Reaktioner"></div>
 
   <section class="dock lead" id="leadPanel" hidden></section>
 
@@ -432,6 +479,8 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
   <div class="foot"><span>Kun fiktive chips. Aluu, og qujanaq for spillet.</span><span id="adminSlot"></span></div>
 </div>
 <div class="toast" id="toast" hidden></div>
+<canvas id="confetti" hidden></canvas>
+<div class="jackpot" id="jackpot" hidden aria-live="polite"></div>
 <div class="conn" id="conn" hidden>Forbindelsen er væk. Prøver igen…</div>
 
 <script>
@@ -744,19 +793,21 @@ const SFX={on:true,ctx:null,
   chip(when=0){[0,.045,.08].forEach((d,i)=>{this.tone(3100+i*420,.05,.09,when+d,'triangle');this.noise(.025,5200,3,.12,when+d)})},
   turn(){this.tone(880,.18,.12);this.tone(1320,.3,.1,.14)},
   win(){[523,659,784,1047].forEach((f,i)=>this.tone(f,.32,.1,i*.11,'triangle'));this.chip(.5);this.chip(.62)},
-  fold(){this.noise(.16,900,.7,.25)}};
+  fold(){this.noise(.16,900,.7,.25)},
+  jackpot(){[523,659,784,1047,1319,1568].forEach((f,i)=>{this.tone(f,.5,.11,i*.09,'square');this.tone(f*1.5,.4,.05,i*.09+.04,'triangle')});for(let k=0;k<6;k++)this.chip(.6+k*.12)}};
 try{SFX.on=localStorage.getItem('nanoq-sound')!=='0'}catch{}
 addEventListener('pointerdown',()=>SFX.unlock(),{once:true});
 // listen to what changed between two states and play the matching sounds
 function soundsFor(prev,next){
   if(!prev||!next||!SFX.ctx)return;const a=prev.hand,b=next.hand;if(!b)return;
   const ms=next.seats.findIndex(p=>p?.uid===me);
-  if(!a||a.id!==b.id){const n=next.seats.filter(p=>p?.inHand).length;for(let k=0;k<n*2;k++)SFX.deal(k*.09);SFX.chip(.1);return}
-  const nb=(b.board||[]).length,ob=(a.board||[]).length;for(let k=ob;k<nb;k++){SFX.deal((k-ob)*.18);SFX.flip((k-ob)*.18+.45)}
+  if(!a||a.id!==b.id){const n=next.seats.filter(p=>p?.inHand).length;for(let k=0;k<n*2;k++)SFX.deal(k*.24);SFX.chip(.1);return}
+  const nb=(b.board||[]).length,ob=(a.board||[]).length;{let t=0;for(let k=ob;k<nb;k++){SFX.deal(t);SFX.flip(t+.5);t+=k<2?.35:1.8}}
+  if(b.phase==='rit'&&a.phase!=='rit'){SFX.turn()}
   const pot=s=>s.seats.reduce((x,p)=>x+(p?.inHand?p.total:0),0);
   if(pot(next)>pot(prev))SFX.chip();
   if(next.seats.some((p,i)=>p?.folded&&!prev.seats[i]?.folded))SFX.fold();
-  if(b.phase==='showdown'&&a.phase!=='showdown'){const won=b.result?.winners?.some(w=>w.seat===ms);if(won)SFX.win();else{SFX.flip();SFX.chip(.8)}}
+  /* win sounds play when the cards are revealed (see celebrate) */
   if(ms>=0&&b.toAct===ms&&(a.toAct!==ms||a.phase!==b.phase)&&b.phase!=='showdown')SFX.turn();
 }
 /* when it is your turn and the tab is in the background, the tab title blinks */
@@ -766,12 +817,39 @@ function turnAlert(){const h=S?.hand,mine=h&&h.toAct===mySeat()&&h.phase!=='show
   if((!mine||!document.hidden)&&blinkT){clearInterval(blinkT);blinkT=null;document.title=BASE_TITLE}}
 document.addEventListener('visibilitychange',turnAlert);
 
+/* ---------- celebrations: confetti, jackpot banners, reactions ---------- */
+const REACTS=['Aluu!','Qujanaq','Mamaq!','Ajunngilaq','Malkemasking!','😂','🔥','🤡','🐻‍❄️','🫡'];
+const REACTS_SHOWN={};
+function confetti(power=1,colors=['#d4122f','#f6f9fb','#5cf2a8','#8fdde0','#ffd23f']){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cv=$('confetti'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;cv.hidden=false;
+  const ps=Array.from({length:Math.round(140*power)},()=>({x:innerWidth/2+(Math.random()-.5)*200,y:innerHeight*.45,vx:(Math.random()-.5)*16*power,vy:-Math.random()*16*power-4,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.3,w:6+Math.random()*8,h:4+Math.random()*6,c:colors[Math.floor(Math.random()*colors.length)]}));
+  let f=0;cancelAnimationFrame(confetti.raf);
+  const step=()=>{f++;x.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()});
+    if(f<200)confetti.raf=requestAnimationFrame(step);else{x.clearRect(0,0,cv.width,cv.height);cv.hidden=true}};
+  step();
+}
+function celebrate(s,h){
+  const ms=mySeat();const won=h.result.winners.some(w=>w.seat===ms);
+  if(won){SFX.win();confetti(.6)}else{SFX.flip();SFX.chip(.6)}
+  const jp=h.result.jackpots||[];if(!jp.length)return;
+  const j=jp.find(x=>x.type==='royal')||jp[0];
+  const el=$('jackpot');
+  el.className='jackpot '+(j.type==='royal'?'royal':'b72');
+  el.innerHTML=j.type==='royal'
+    ?`<div class="jp-inner"><small>Kalaallit Nunaat Royal</small><b>ROYAL FLUSH<br>JACKPOT!</b><span>${esc(nick(s,j.seat))} får ${fmt(j.amount)} chips fra banken</span></div>`
+    :`<div class="jp-inner"><small>Husregel</small><b>7-2<br>BONUS!</b><span>${esc(nick(s,j.seat))} vandt med 7-2 og snupper ${fmt(j.amount)} fra bordet</span></div>`;
+  el.hidden=false;void el.offsetWidth;el.classList.add('on');
+  SFX.jackpot();confetti(j.type==='royal'?2:1.3,j.type==='royal'?['#ffd23f','#fff3b0','#d4122f','#f6f9fb']:['#d4122f','#f6f9fb','#5cf2a8']);
+  clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>{el.classList.remove('on');setTimeout(()=>el.hidden=true,500)},4800);
+}
+
 /* ---------- incremental rendering: only touched parts of the table are rebuilt ---------- */
 function setHTML(el,html){if(el._h!==html){el._h=html;el.innerHTML=html}}
 const CE={};
 function ensureCenter(){if(CE.root)return;CE.root=$('center');
-  CE.root.innerHTML=`<div class="phase"></div><div class="board">${'<span class="slot" style="display:contents"></span>'.repeat(5)}</div><div class="cbot" style="display:contents"></div>${MOTTO}`;
-  CE.phase=CE.root.querySelector('.phase');CE.slots=[...CE.root.querySelectorAll('.slot')];CE.bot=CE.root.querySelector('.cbot')}
+  CE.root.innerHTML=`<div class="phase"></div><div class="board b1"><i class="runlbl">1</i>${'<span class="slot" style="display:contents"></span>'.repeat(5)}</div><div class="board b2"><i class="runlbl">2</i>${'<span class="slot2" style="display:contents"></span>'.repeat(5)}</div><div class="cbot" style="display:contents"></div>${MOTTO}`;
+  CE.phase=CE.root.querySelector('.phase');CE.slots=[...CE.root.querySelectorAll('.slot')];CE.slots2=[...CE.root.querySelectorAll('.slot2')];CE.bot=CE.root.querySelector('.cbot')}
 const SE=[],SM=[];
 function ensureSeats(){if(SE.length)return;const host=$('seats');
   for(let i=0;i<N;i++){const seat=document.createElement('div');seat.className='seat';seat.dataset.pos=i;
@@ -825,22 +903,46 @@ function render(){
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><span class="pill">Ved bordet <b>${seated}/${N}</b></span>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
+  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
-  const phaseName={preflop:'Preflop',flop:'Flop',turn:'Turn',river:'River',showdown:'Opgør'}[h?.phase]||'Venter på spillere';
-  const winCards=new Set((h?.result?.winners||[]).flatMap(w=>w.best||[]));
-  ensureCenter();setHTML(CE.phase,phaseName);
-  let fresh=0;
-  for(let i=0;i<5;i++){const el=CE.slots[i],c=h?.board?.[i],win=c!=null&&winCards.has(c),key=c==null?'g':c+(win?'w':'');
-    if(el._k===key)continue;
-    const isNew=c!=null&&el._c!==c;
-    el.innerHTML=c==null?'<div class="card ghost"></div>':cardHTML(c,{cls:isNew?'board':(win?'lift':''),i:fresh,dl:isNew?(fresh++)*.18:0,win});
-    el._k=key;el._c=c;}
+  ensureCenter();
+  // new board cards come out one street at a time; results wait until the last card has turned
+  const twoRuns=!!(h?.result?.runs);
+  const boards=[h?.board||[],twoRuns?h.result.runs[1].board:null];
+  let t=0,revealIn=0;
+  const placeBoard=(slots,cards,winSet,base)=>{
+    let tt=base;
+    for(let i=0;i<5;i++){const el=slots[i],c=cards?.[i],key=c==null?'g':c+'';
+      if(el._k===key&&!(c!=null&&el._win!==winSet.has(c)))continue;
+      const isNew=c!=null&&el._c!==c;let dl=0;
+      if(isNew){dl=tt;tt+=i<2?.35:1.8;revealIn=Math.max(revealIn,dl+1.3)}
+      el.innerHTML=c==null?'<div class="card ghost"></div>':cardHTML(c,{cls:isNew?'board':(winSet.has(c)&&CE.revealed?'lift':''),i:0,dl,win:winSet.has(c)&&CE.revealed});
+      el._k=key;el._c=c;el._win=winSet.has(c)&&CE.revealed;}
+    return tt;};
+  if(CE.hid!==h?.id){CE.hid=h?.id;CE.revealAt=0;CE.revealed=false}
+  const runWin=k=>new Set((twoRuns?h.result.runs[k].winners:(k?[]:h?.result?.winners||[])).flatMap(w=>w.best||[]));
+  t=placeBoard(CE.slots,boards[0],CE.revealed?runWin(0):new Set(),0);
+  CE.root.classList.toggle('two',twoRuns);
+  if(twoRuns)placeBoard(CE.slots2,boards[1],CE.revealed?runWin(1):new Set(),Math.max(.4,t-1.0));
+  else CE.slots2.forEach(el=>{if(el._k!=='g'){el.innerHTML='<div class="card ghost"></div>';el._k='g';el._c=null}});
+  if(h?.phase==='showdown'&&!CE.revealed){
+    const at=performance.now()+revealIn*1000;
+    if(!CE.revealAt||at>CE.revealAt)CE.revealAt=at;
+    if(performance.now()>=CE.revealAt){CE.revealed=true;CE.slots.concat(CE.slots2).forEach(el=>el._k=null);clearTimeout(CE.rt);return render()}
+    clearTimeout(CE.rt);CE.rt=setTimeout(render,CE.revealAt-performance.now()+20);
+  }
+  const reveal=h?.phase==='showdown'&&CE.revealed;
+  const winCards=reveal?new Set([...runWin(0),...(twoRuns?runWin(1):[])]):new Set();
+  const phaseName={preflop:'Preflop',flop:'Flop',turn:'Turn',river:'River',showdown:reveal?'Opgør':'…',rit:'Run it twice?'}[h?.phase]||'Venter på spillere';
+  setHTML(CE.phase,phaseName);
   let banner='';
-  if(h?.phase==='showdown'&&h.result){
+  if(reveal&&h.result){
     const w=h.result.winners;
-    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}<span>${esc(w[0].hand||'Alle andre foldede')}</span><em>“${esc(CHARS[w[0].seat].win)}”</em></div>`;
+    const runsTxt=twoRuns?`<span>${h.result.runs.map((r,k)=>`Run ${k+1}: ${r.winners.map(x=>esc(nick(s,x.seat))).join(' & ')} · ${esc(r.winners[0]?.hand||'')}`).join('<br>')}</span>`:`<span>${esc(w[0].hand||'Alle andre foldede')}</span>`;
+    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}${runsTxt}<em>“${esc(CHARS[w[0].seat].win)}”</em></div>`;
+  } else if(h?.phase==='rit'){
+    const v=h.ritVotes||{};banner=`<div class="banner rit-banner">Run it twice?<span>${(h.ritSeats||[]).map(i=>`${esc(nick(s,i))}: ${v[i]===undefined?'…':v[i]?'to gange':'én gang'}`).join(' · ')}</span></div>`;
   }
   setHTML(CE.bot,banner||(pot?`<div class="pot">${pileHTML(pot)}<span class="amt">${fmt(pot)}</span></div>`:''));
   // seats
@@ -855,15 +957,15 @@ function render(){
       setHTML(SE[i].stack,'');setHTML(SE[i].bet,'');M.kind='none';M.hid=null;M.key='';continue;
     }
     const e=seatParts(i,'taken:'+p.uid);
-    const isMe=p.uid===me,turn=h&&h.toAct===i&&h.phase!=='showdown';
-    const isWin=h?.phase==='showdown'&&h.result?.winners?.some(w=>w.seat===i);
-    e.seat.className=`seat ${isMe?'me':''} ${turn?'turn':''} ${p.folded&&p.inHand?'folded':''} ${isWin?'winner':''}`;
-    // where the deck is, seen from this seat, so cards fly in from the table centre
+    const isMe=p.uid===me,turn=h&&h.toAct===i&&h.phase!=='showdown'&&h.phase!=='rit';
+    const isWin=reveal&&h.result?.winners?.some(w=>w.seat===i);
+    const voting=h?.phase==='rit'&&(h.ritSeats||[]).includes(i)&&h.ritVotes?.[i]===undefined;
+    e.seat.className=`seat ${isMe?'me':''} ${turn||voting?'turn':''} ${p.folded&&p.inHand?'folded':''} ${isWin?'winner':''}`;
     e.hand.style.setProperty('--fx',((50-pos.x)/100*WW/pos.s).toFixed(0)+'px');
     e.hand.style.setProperty('--fy',((50-pos.y)/100*WH/pos.s).toFixed(0)+'px');
     // hole cards
     let kind='none',cards=[];
-    if(p.inHand&&h){const shown=h.result?.shown?.[i];
+    if(p.inHand&&h){const shown=reveal?h.result?.shown?.[i]:null;
       if(isMe&&!p.folded){kind='mine';cards=dec(p.hole)}
       else if(shown){kind='shown';cards=shown}
       else if(!p.folded)kind='back';
@@ -872,11 +974,11 @@ function render(){
     const winKey=cards.map(c=>winCards.has(c)?1:0).join('');
     const key=kind+'|'+(h?.id??'')+'|'+cards.join(',')+'|'+winKey;
     if(key!==M.key){
-      const k=order.indexOf(i),n=order.length,d1=Math.max(0,k)*.09,d2=(n+Math.max(0,k))*.09;
+      const STEP=.24,k=order.indexOf(i),n=order.length,d1=Math.max(0,k)*STEP,d2=(n+Math.max(0,k))*STEP;
       let html='';
       if(kind==='mine'){const deal=newHand||M.kind==='none';html=cards.map((c,j)=>cardHTML(c,{cls:deal?'deal mine':(winCards.has(c)?'lift':''),dl:j?d2:d1,win:winCards.has(c)})).join('')}
       else if(kind==='back'){const deal=newHand||M.kind==='none';html=backHTML({cls:deal?'deal':'',dl:d1})+backHTML({cls:deal?'deal':'',dl:d2})}
-      else if(kind==='shown'){const rv=M.kind!=='shown';html=cards.map((c,j)=>cardHTML(c,{cls:rv?'reveal':(winCards.has(c)?'lift':''),dl:j*.12,win:winCards.has(c)})).join('')}
+      else if(kind==='shown'){const rv=M.kind!=='shown';html=cards.map((c,j)=>cardHTML(c,{cls:rv?'reveal':(winCards.has(c)?'lift':''),dl:rv?.15+j*.3:0,win:winCards.has(c)})).join('')}
       else if(kind==='folded'&&!newHand&&(M.kind==='mine'||M.kind==='back')){
         html=M.kind==='mine'?dec(p.hole).map(c=>cardHTML(c,{cls:'muck'})).join(''):backHTML({cls:'muck'})+backHTML({cls:'muck'})}
       e.hand.innerHTML=html;M.key=key;
@@ -885,26 +987,34 @@ function render(){
     // tag, avatar, name, chips
     let tag='';
     if(p.leaving)tag='<span class="tag">Går</span>';
-    else if(p.allin&&p.inHand&&!p.folded)tag='<span class="tag">All-in</span>';
+    else if(voting)tag='<span class="tag ok">Stemmer…</span>';
+    else if(p.allin&&p.inHand&&!p.folded&&!reveal)tag='<span class="tag">All-in</span>';
     else if(isWin)tag=`<span class="tag ok">+${fmt(h.result.winners.find(w=>w.seat===i).amount)}</span>`;
-    else if(h?.phase==='showdown'&&h.result?.names?.[i])tag=`<span class="tag ok" style="background:var(--glacier)">${esc(h.result.names[i])}</span>`;
+    else if(reveal&&h.result?.names?.[i])tag=`<span class="tag ok" style="background:var(--glacier)">${esc(h.result.names[i])}</span>`;
     else if(p.chips===0&&!p.inHand)tag='<span class="tag">Flad</span>';
     setHTML(e.tag,tag+(s.dealer===i&&h?'<span class="dealer">D</span>':''));
     setHTML(e.av,avatar(i));
-    setHTML(e.pt,`<div class="nm">${esc(p.nick)}${isMe?' (dig)':''}</div><div class="cn">${esc(CHARS[i].name)}</div>${s.leader&&p.uid===s.leader?'<span class="lead-badge">Leder</span>':''}<div class="ch">${fmt(p.chips)}</div>`);
+    // chips are shown as they were before the pot is paid, until the cards are revealed
+    let chipsNow=p.chips;
+    if(h?.phase==='showdown'&&!reveal){const w=(h.result?.winners||[]).find(x=>x.seat===i);if(w)chipsNow-=w.amount;(h.result?.jackpots||[]).forEach(j=>{if(j.seat===i)chipsNow-=j.amount;else if(j.type==='72')chipsNow+=s.jp72})}
+    chipsNow=Math.max(0,chipsNow);
+    setHTML(e.pt,`<div class="nm">${esc(p.nick)}${isMe?' (dig)':''}</div><div class="cn">${esc(CHARS[i].name)}</div>${s.leader&&p.uid===s.leader?'<span class="lead-badge">Leder</span>':''}<div class="ch">${fmt(chipsNow)}</div>`);
     setHTML(e.timer,turn?`<div class="timer"><i data-turnat="${h.turnAt}"></i></div>`:'');
     let bubble='';const say=h?.say;
-    if(say&&say.seat===i&&clock()-say.at<5500){const line=sayLine(s);if(line)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${say.at}">${esc(line)}</div>`}
+    const rx=REACTS_SHOWN[i];
+    if(rx&&Date.now()-rx.t<4000)bubble=`<div class="bubble react ${pos.y<50?'below':''}" data-at="${rx.at}">${esc(rx.text)}</div>`;
+    else if(say&&say.seat===i&&clock()-say.at<5500){const line=sayLine(s);if(line)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${say.at}">${esc(line)}</div>`}
     if(!bubble&&p.joinedAt&&clock()-p.joinedAt<6000&&!h?.say)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${p.joinedAt}">${esc(CHARS[i].sit)}</div>`;
     setHTML(e.bub,bubble);
-    setHTML(SE[i].stack,p.chips>0?`<div class="pstack" data-pos="${i}" aria-hidden="true">${stacksHTML(p.chips,32,10)}</div>`:'');
+    setHTML(SE[i].stack,chipsNow>0?`<div class="pstack" data-pos="${i}" aria-hidden="true">${stacksHTML(chipsNow,32,10)}</div>`:'');
     setHTML(SE[i].bet,p.bet>0?`<div class="bet" data-pos="${i}">${stacksHTML(p.bet)}<b>${fmt(p.bet)}</b></div>`:'');
   }
-  // the pot slides over to the winner(s)
-  if(h?.phase==='showdown'&&h.result&&CE.flown!==h.id){CE.flown=h.id;
+  // the pot slides over to the winner(s), then any jackpot gets its moment
+  if(reveal&&h.result&&CE.flown!==h.id){CE.flown=h.id;
     const fx=$('fx');fx.innerHTML=h.result.winners.map(w=>{const ps=seatPos(w.seat,ms);
       return `<div class="potfly" style="--tx:${((ps.x-50)/100*WW).toFixed(0)}px;--ty:${((ps.y-50)/100*WH).toFixed(0)}px">${stacksHTML(w.amount,24,8)}</div>`}).join('');
-    setTimeout(()=>{if(CE.flown===h.id)fx.innerHTML=''},2200);}
+    setTimeout(()=>{if(CE.flown===h.id)fx.innerHTML=''},2600);
+    celebrate(s,h);}
   moveCamera();
   // log
   $('log').innerHTML=s.log.slice().reverse().map(m=>`<li>${esc(m)}</li>`).join('')||'<li>Ingen hænder spillet endnu.</li>';
@@ -917,6 +1027,7 @@ function render(){
 }
 
 function renderDock(){
+  {const r=$('reacts');const sat=joined&&mySeat()>=0;r.hidden=!sat;if(sat&&!r.childElementCount)r.innerHTML=REACTS.map((t,i)=>`<button data-react="${i}">${t}</button>`).join('')}
   const dock=$('dock');const s=S||emptyState();const h=s.hand;const ms=mySeat();const p=ms>=0?s.seats[ms]:null;
   if(!joined){
     const key='lobby'+lobbyErr+busy+(sock?.connected);if(key===lastBarKey)return;lastBarKey=key;
@@ -936,6 +1047,13 @@ function renderDock(){
     return;
   }
   const betting=h&&['preflop','flop','turn','river'].includes(h.phase);
+  if(h?.phase==='rit'&&(h.ritSeats||[]).includes(ms)&&h.ritVotes?.[ms]===undefined){
+    const key=`rit${h.id}${busy}`;if(key===lastBarKey)return;lastBarKey=key;
+    dock.innerHTML=`<div class="rit-box"><div class="row" style="justify-content:space-between"><h2>Alle er all-in!</h2><span class="status">Tiden løber: 15 sek.</span></div>
+      <p>Skal kortene deles én eller to gange? Deler I to gange, deles puljen i to, og hver halvdel går til vinderen af sin runde. Alle skal sige ja.</p>
+      <div class="row"><button class="btn call" data-rit="0" ${busy?'disabled':''}>Én gang</button><button class="btn raise" data-rit="1" ${busy?'disabled':''}>To gange</button></div></div>`;
+    return;
+  }
   if(betting&&h.toAct===ms){
     const toCall=Math.min(h.curBet-p.bet,p.chips);
     const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips;
@@ -963,6 +1081,8 @@ function renderDock(){
     else msg=h?'Næste hånd deles om lidt…':'Klar når I er. Del kortene for at starte.';
     if(eligibleCount<2&&s.code)msg+=` Bordkode: ${s.code}.`;
     if(eligibleCount>=2&&!s.paused)btns+=`<button class="btn go" id="dealBtn" ${busy?'disabled':''}>Del kort</button>`;
+  } else if(h.phase==='rit'){
+    msg='Venter på at alle stemmer om run it twice…';
   } else if(p.inHand&&!p.folded){
     msg=`Venter på ${esc(nick(s,h.toAct))}…`;
   } else msg=p.inHand?'Du har foldet. Næste hånd kommer.':'Du er med fra næste hånd.';
@@ -992,7 +1112,7 @@ function renderLead(){
   const s=S||emptyState();
   const players=s.seats.map((p,i)=>p?{i,p}:null).filter(Boolean);
   const reqs=Object.keys(s.requests||{}).map(uid=>({uid,i:s.seats.findIndex(p=>p?.uid===uid)})).filter(r=>r.i>=0);
-  const key=JSON.stringify([s.sb,s.bb,s.stack,s.paused,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,busy]);
+  const key=JSON.stringify([s.sb,s.bb,s.stack,s.paused,s.jpRoyal,s.jp72,s.rit,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,busy]);
   if(key===leadKey)return;leadKey=key;
   // keep anything the leader is typing
   const keep={};el.querySelectorAll('input').forEach(x=>{if(x.value!==x.defaultValue)keep[x.id]=x.value});
@@ -1021,6 +1141,12 @@ function renderLead(){
       <div class="field"><label for="setStack">Startchips</label><input type="number" id="setStack" min="1" value="${s.stack}"></div>
       <button class="btn small" id="saveSettings" ${busy?'disabled':''}>Gem</button>
     </div>
+    <div class="lead-grid">
+      <div class="field"><label for="setJpRoyal">Royal flush-jackpot</label><input type="number" id="setJpRoyal" min="0" step="100" value="${s.jpRoyal}"></div>
+      <div class="field"><label for="setJp72">7-2-bonus pr. spiller</label><input type="number" id="setJp72" min="0" step="10" value="${s.jp72}"></div>
+      <label class="switch" for="setRit"><input type="checkbox" id="setRit" ${s.rit?'checked':''}> Run it twice</label>
+    </div>
+    <p class="lead-sub" style="margin:0">Royal flush-jackpotten betales af banken. 7-2-bonussen betaler hver spiller ved bordet til den, der vinder en pulje med 7-2. Sæt et beløb til 0 for at slå det fra.</p>
     <div class="row" style="justify-content:space-between"><span class="lead-sub">Nye blinds gælder fra næste hånd</span><button class="btn tiny warn" id="resetBtn" ${busy?'disabled':''}>${armReset?'Klik igen for at nulstille alt':'Nulstil bord'}</button></div>`;
   Object.entries(keep).forEach(([id,v])=>{const x=$(id);if(x)x.value=v});
   if(focusId&&$(focusId))$(focusId).focus();
@@ -1059,10 +1185,14 @@ document.addEventListener('click',e=>{
   if(t.dataset.preset){setRaise(+t.dataset.preset);return}
   if(t.dataset.lead){leadAction(t.dataset.lead,+t.dataset.seat);return}
   if(t.id==='pauseBtn'){send('pause');return}
+  if(t.dataset.rit!=null){send('rit',{yes:t.dataset.rit==='1'});return}
+  if(t.dataset.react!=null){sock.emit('react',{i:+t.dataset.react});return}
   if(t.id==='saveSettings'){
     const sb=Math.floor(+$('setSb').value),bb=Math.floor(+$('setBb').value),st=Math.floor(+$('setStack').value);
     if(!(sb>0&&bb>=sb&&st>=bb)){toast('Stor blind skal være mindst lille blind, og startchips mindst stor blind.');return}
-    send('settings',{sb,bb,stack:st});return;
+    const jpRoyal=Math.floor(+$('setJpRoyal').value),jp72=Math.floor(+$('setJp72').value);
+    if(!(jpRoyal>=0&&jp72>=0)){toast('Jackpot-beløb skal være 0 eller mere.');return}
+    send('settings',{sb,bb,stack:st,jpRoyal,jp72,rit:$('setRit').checked});return;
   }
   if(t.id==='askBtn'){const amt=Math.floor(+($('askAmt')?.value||0));if(!(amt>0)){toast('Skriv hvor mange chips du vil have.');return}send('ask',{amount:amt});return}
   if(t.id==='dealBtn'){send('deal');return}
@@ -1095,6 +1225,7 @@ sock.on('connect',joinRoom);
 sock.on('disconnect',()=>{$('conn').hidden=false});
 sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);render();turnAlert()});
 sock.on('connect',()=>{$('conn').hidden=true});
+sock.on('react',r=>{REACTS_SHOWN[r.seat]={text:r.text,at:r.at,t:Date.now()};SFX.tone(1200,.08,.06);SFX.tone(1600,.1,.05,.06);render();setTimeout(render,4100)});
 addEventListener('hashchange',joinRoom);
 </script>
 
