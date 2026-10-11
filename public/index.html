@@ -582,6 +582,89 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 .chat .empty{color:var(--muted);font-size:13px}
 .unread{background:var(--aurora);color:var(--night);border-radius:999px;padding:0 6px;margin-left:4px;font-size:11px;font-weight:800}
 .tv #dock,.tv #hud,.tv #reacts,.tv #chatBox,.tv #leadPanel,.tv #logBox,.tv .foot{display:none!important}
+/* v6: gags, decorations, commentator, sound panel, finale */
+.gag{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden}
+.g-bg{position:absolute;inset:0;animation:gFade var(--d,3s) ease both}
+@keyframes gFade{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+.g-title{position:absolute;left:50%;top:16%;transform:translateX(-50%);text-align:center;width:min(92vw,900px);animation:gTitle .55s cubic-bezier(.2,1.4,.4,1) both}
+.g-title b{display:block;font-family:var(--f-display);font-weight:900;font-size:clamp(34px,7vw,88px);line-height:1;color:var(--c,#ffd23f);text-shadow:0 4px 0 #000,0 0 30px rgba(0,0,0,.7);letter-spacing:.02em;text-transform:uppercase}
+.g-title small{display:inline-block;margin-top:12px;font-size:clamp(14px,2vw,20px);font-weight:700;background:rgba(5,10,21,.8);padding:6px 14px;border-radius:999px;color:#fff}
+@keyframes gTitle{from{transform:translateX(-50%) scale(.3);opacity:0}}
+.g-fly{position:absolute;line-height:1;will-change:transform;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.g-fly .av{--w:64px;margin:0}
+.g-vine{position:absolute;top:-20px;left:12%;width:4px;height:48vh;background:linear-gradient(#3d5c2a,#6b8f3a);transform-origin:top center;animation:gSwing 2.6s ease-in-out both}
+.g-vine span{position:absolute;bottom:-50px;left:50%;transform:translateX(-50%);font-size:72px}
+@keyframes gSwing{0%{transform:rotate(-75deg)}45%{transform:rotate(42deg)}75%{transform:rotate(-15deg)}100%{transform:rotate(8deg)}}
+.g-weed{position:absolute;bottom:10%;left:-140px;width:96px;height:96px;border-radius:50%;border:7px dotted #b08850;box-shadow:inset 0 0 0 10px rgba(176,136,80,.45),inset 0 0 0 22px rgba(120,90,50,.35);animation:gRoll 5.5s linear both}
+@keyframes gRoll{0%{transform:translateX(0) translateY(0) rotate(0)}25%{transform:translateX(30vw) translateY(-40px) rotate(400deg)}50%{transform:translateX(60vw) translateY(0) rotate(800deg)}75%{transform:translateX(85vw) translateY(-30px) rotate(1100deg)}100%{transform:translateX(calc(100vw + 280px)) translateY(0) rotate(1500deg)}}
+.g-hat{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:clamp(90px,16vw,170px);animation:gBob 1s ease-in-out infinite alternate}
+@keyframes gBob{from{transform:translate(-50%,-50%) rotate(-8deg)}to{transform:translate(-50%,-56%) rotate(8deg)}}
+.g-flake{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;animation:blow linear infinite;opacity:.9}
+.g-walk{position:absolute;bottom:14%;left:30%;animation:gWalk 5s ease-in both}
+.g-walk .av{--w:110px;margin:0;animation:gStep .45s ease-in-out infinite alternate}
+@keyframes gWalk{0%{transform:translateX(0);opacity:1;filter:blur(0)}70%{opacity:.8}100%{transform:translateX(58vw);opacity:0;filter:blur(6px)}}
+@keyframes gStep{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-10px) rotate(4deg)}}
+.g-mid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:clamp(90px,18vw,200px);line-height:1}
+.g-pop{animation:gPop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes gPop{from{transform:translate(-50%,-50%) scale(0) rotate(-30deg)}}
+.g-spin{animation:gSpin .7s linear infinite}
+@keyframes gSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.g-tup{position:absolute;left:50%;top:56%;width:min(40vw,240px);transform:translate(-50%,-50%);animation:gTup 3.6s ease-in-out both}
+.g-tup svg{width:100%;height:auto;filter:drop-shadow(0 0 30px #5cf2a8)}
+@keyframes gTup{0%{transform:translate(-50%,-30%) scale(.4);opacity:0}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+.g-red{animation:gRed .45s steps(2) 6}
+@keyframes gRed{50%{background:rgba(212,18,47,.45)}}
+.g-puff{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);font-size:44px;color:#ccc;font-weight:900;opacity:0;animation:gPuff 1.4s ease 1.3s both}
+@keyframes gPuff{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1.3)}}
+.s-av{position:relative}
+.d-ears{position:absolute;inset:0;pointer-events:none}
+.d-ears::before,.d-ears::after{content:"";position:absolute;top:22%;width:36%;height:36%;border-radius:50%;background:#e0a872;border:4px solid #6b4430;box-sizing:border-box}
+.d-ears::before{left:-20%}.d-ears::after{right:-20%}
+.d-nose{position:absolute;left:52%;top:50%;width:80%;height:10%;background:linear-gradient(90deg,#e8b47e,#c98a52);border-radius:0 60% 60% 0;transform-origin:left center;animation:dNose 1s cubic-bezier(.2,1.5,.4,1) both;box-shadow:0 2px 3px rgba(0,0,0,.4)}
+@keyframes dNose{from{transform:scaleX(0)}}
+.d-stamp{position:absolute;left:50%;top:45%;width:58px;height:58px;margin:-29px 0 0 -29px;display:grid;place-items:center;font-size:32px;border:3px solid #d4122f;border-radius:50%;background:rgba(255,255,255,.8);transform:rotate(-14deg);animation:dStamp .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes dStamp{from{transform:rotate(-14deg) scale(3);opacity:0}}
+.d-steam{position:absolute;z-index:6;left:50%;top:-38%;font-size:22px;animation:dSteam 1.3s ease-in-out infinite;pointer-events:none}
+@keyframes dSteam{0%{transform:translate(-50%,6px);opacity:.3}50%{opacity:1}100%{transform:translate(-50%,-10px);opacity:.2}}
+.d-curse{position:absolute;right:-22%;top:-12%;font-size:17px}
+.av:has(.d-curse) svg{filter:drop-shadow(0 0 6px #5cf2a8) drop-shadow(0 0 12px #5cf2a8)}
+.heads{display:flex;gap:1px;justify-content:center;margin-top:2px;flex-wrap:wrap;max-width:110px}
+.heads .av{--w:16px;margin:0}
+.caster{position:fixed;left:50%;bottom:18px;transform:translate(-50%,160%);z-index:70;max-width:min(92vw,720px);background:rgba(5,10,21,.94);border:1px solid var(--aurora);color:#fff;padding:10px 16px;border-radius:14px;font-weight:700;font-size:15px;line-height:1.35;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.2,.4,1);pointer-events:none}
+.caster.show{transform:translate(-50%,0)}
+.volpanel{position:fixed;right:16px;top:64px;z-index:85;background:#0d1b2c;border:1px solid var(--line);border-radius:16px;padding:14px;width:min(300px,calc(100vw - 32px));box-shadow:0 18px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:10px}
+.volpanel h3{margin:0;font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em}
+.volpanel label{display:grid;grid-template-columns:1fr 46px;gap:2px 8px;font-size:14px;font-weight:600;align-items:center}
+.volpanel input{grid-column:1/-1;width:100%}
+.volpanel output{text-align:right;color:var(--muted);font-size:12px}
+.finale{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;background:radial-gradient(circle at 50% 20%,rgba(75,42,122,.92),rgba(5,10,21,.97) 70%);overflow-y:auto;box-sizing:border-box}
+.fin-box{width:min(980px,100%);display:flex;flex-direction:column;gap:16px}
+.fin-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fin-head h1{margin:0;font-family:var(--f-display);font-size:clamp(26px,5vw,48px);text-transform:uppercase;letter-spacing:.03em;color:#ffd23f;text-shadow:0 3px 0 #000}
+.fin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.fin-card{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;animation:finPop .6s cubic-bezier(.2,1.4,.4,1) both}
+.fin-card .ic{font-size:40px;line-height:1}
+.fin-card .t{font-family:var(--f-label);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.fin-card .n{font-size:20px;font-weight:800}
+.fin-card .d{font-size:13px;color:var(--muted)}
+.fin-card .av{--w:56px;margin:0}
+@keyframes finPop{from{transform:scale(.4);opacity:0}}
+.fin-shaman{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;padding:20px 0}
+.fin-shaman .orb{font-size:90px;animation:gBob 1.2s ease-in-out infinite alternate;display:inline-block}
+.fin-shaman p{margin:0;font-size:clamp(17px,2.4vw,24px);font-weight:700}
+.fin-shaman .v{font-size:clamp(20px,3vw,30px);font-weight:900;animation:finPop .6s both}
+.race{display:flex;flex-direction:column;gap:12px}
+.lane{position:relative;height:78px;border-bottom:2px dashed rgba(227,244,247,.25);background:linear-gradient(90deg,rgba(227,244,247,.04),rgba(227,244,247,.12));border-radius:10px;overflow:hidden}
+.lane .goal{position:absolute;right:0;top:0;bottom:0;width:12px;background:repeating-linear-gradient(0deg,#fff 0 9px,#000 9px 18px)}
+.lane .nm{position:absolute;left:8px;top:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.sled{position:absolute;left:4px;top:52%;transform:translateY(-50%);display:flex;align-items:center;gap:0;font-size:30px;white-space:nowrap}
+.sled .dogs{display:inline-block;transform:scaleX(-1)}
+.sled .av{--w:46px;margin:0}
+.podium{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:6px}
+.podium div{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;animation:finPop .6s both}
+.podium .av{--w:60px;margin:0}
+.podium .m{font-size:38px}
+@media (prefers-reduced-motion:reduce){.gag *{animation-duration:.01s!important}}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -673,6 +756,9 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 </div>
 <div class="toast" id="toast" hidden></div>
 <canvas id="confetti" hidden></canvas>
+<div class="caster" id="caster" aria-live="polite"></div>
+<div class="volpanel" id="volPanel" hidden></div>
+<div class="finale" id="finale" hidden aria-live="polite"></div>
 <div class="jackpot" id="jackpot" hidden aria-live="polite"></div>
 <div class="conn" id="conn" hidden>Forbindelsen er væk. Prøver igen…</div>
 
@@ -1113,14 +1199,14 @@ const mySeat=()=>S?S.seats.findIndex(p=>p?.uid===me):-1;
 
 
 /* ---------- sound: tiny synthesized effects, started after the first tap ---------- */
-const SFX={on:true,ctx:null,
+const SFX={on:true,ctx:null,cat:'fx',vol:{fx:1,char:1,music:.9,voice:.8},m(){return this.vol[this.cat]??1},as(c,fn){const o=this.cat;this.cat=c;try{fn()}finally{this.cat=o}},
   unlock(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)()}catch{}}this.ctx?.resume?.()},
   noise(dur,freq,q,gain,when=0){const c=this.ctx;if(!c||!this.on)return;const t=c.currentTime+when;const len=Math.ceil(c.sampleRate*dur);
     const buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
     const src=c.createBufferSource();src.buffer=buf;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
-    const g=c.createGain();g.gain.value=gain;src.connect(f).connect(g).connect(c.destination);src.start(t)},
+    const g=c.createGain();g.gain.value=gain*this.m();src.connect(f).connect(g).connect(c.destination);src.start(t)},
   tone(freq,dur,gain,when=0,type='sine'){const c=this.ctx;if(!c||!this.on)return;const t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();
-    o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(Math.max(.00011,gain*this.m()),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02)},
   deal(when=0){this.noise(.09,2600,.9,.35,when)},
   flip(when=0){this.noise(.05,4200,1.4,.28,when);this.tone(1800,.03,.05,when+.02,'triangle')},
@@ -1129,14 +1215,14 @@ const SFX={on:true,ctx:null,
   win(){[523,659,784,1047].forEach((f,i)=>this.tone(f,.32,.1,i*.11,'triangle'));this.chip(.5);this.chip(.62)},
   fold(){this.noise(.16,900,.7,.25)},
   slide(f0,f1,dur,gain,type='sine',when=0){const c=this.ctx;if(!c||!this.on)return;const t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();
-    o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(Math.max(.00011,gain*this.m()),t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.05)},
   boom(when=0){this.slide(140,38,.7,.5,'sine',when);this.noise(.5,120,.6,1.2,when)},
   whoosh(){this.noise(.5,1200,.6,.35);this.slide(500,1400,.4,.03,'sine')},
   splat(){this.noise(.18,500,.8,.9);this.tone(160,.15,.15,0,'square')},
   blub(){[0,.18,.32].forEach((d,k)=>this.slide(300+k*90,900+k*120,.12,.06,'sine',d))},
   jackpot(){[523,659,784,1047,1319,1568].forEach((f,i)=>{this.tone(f,.5,.11,i*.09,'square');this.tone(f*1.5,.4,.05,i*.09+.04,'triangle')});for(let k=0;k<6;k++)this.chip(.6+k*.12)}};
-try{SFX.on=localStorage.getItem('nanoq-sound')!=='0'}catch{}
+try{SFX.on=localStorage.getItem('nanoq-sound')!=='0';Object.assign(SFX.vol,JSON.parse(localStorage.getItem('nanoq-vol')||'{}'))}catch{}
 addEventListener('pointerdown',()=>SFX.unlock(),{once:true});
 // listen to what changed between two states and play the matching sounds
 function soundsFor(prev,next){
@@ -1216,7 +1302,7 @@ function nextAllin(){
   const el=document.createElement('div');el.className=`ai ${sc.cls||''}`;el.style.setProperty('--glow',sc.glow);
   el.innerHTML=`<div class="bg" style="background:${sc.bg}"></div>${sc.html(nm)}<div class="ttl"><b style="${sc.small?'font-size:clamp(34px,7vw,92px)':''}">${sc.t}</b><span>${esc(nm)} går ALL-IN</span>${line?`<em>“${esc(line)}”</em>`:''}</div>`;
   document.body.appendChild(el);
-  try{sc.sfx()}catch{}
+  try{SFX.as('char',()=>sc.sfx())}catch{}
   if(sc.shake){const a=document.querySelector('.app');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');setTimeout(()=>a.classList.remove('shake'),1800)}
   setTimeout(()=>{el.remove();nextAllin()},3700);
 }
@@ -1280,7 +1366,8 @@ function celebrate(s,h){
   const ms=mySeat();const won=h.result.winners.some(w=>w.seat===ms);
   const top=[...h.result.winners].sort((a,b)=>b.amount-a.amount)[0];
   if(won)confetti(.6);
-  if(top&&WIN_SFX[top.seat]){SFX.chip(.6);try{WIN_SFX[top.seat]()}catch{}}else if(won)SFX.win();else{SFX.flip();SFX.chip(.6)}
+  if(top&&WIN_SFX[top.seat]){SFX.chip(.6);try{SFX.as('char',()=>WIN_SFX[top.seat]())}catch{}}else if(won)SFX.win();else{SFX.flip();SFX.chip(.6)}
+  runEndFx(h);
   const jp=h.result.jackpots||[];if(!jp.length)return;
   const j=jp.find(x=>x.type==='royal')||jp[0];
   const el=$('jackpot');
@@ -1352,7 +1439,7 @@ function render(){
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}<button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
+  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lyd</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   ensureCenter();
@@ -1463,12 +1550,12 @@ function render(){
     else if(p.chips===0&&!p.inHand)tag='<span class="tag">Flad</span>';
     if(reveal&&(h.result?.slow||[]).includes(i))tag+='<span class="tag slow">Dårlig stil 🐟</span>';
     setHTML(e.tag,tag+(s.dealer===i&&h?'<span class="dealer">D</span>':''));
-    setHTML(e.av,avatar(i));
+    setHTML(e.av,avatar(i).replace(/<\/span>$/,decoHTML(s,h,i,p,reveal)+'</span>'));
     // chips are shown as they were before the pot is paid, until the cards are revealed
     let chipsNow=p.chips;
     if(h?.phase==='showdown'&&!reveal){const w=(h.result?.winners||[]).find(x=>x.seat===i);if(w)chipsNow-=w.amount;(h.result?.jackpots||[]).forEach(j=>{if(j.seat===i)chipsNow-=j.amount;else if(j.type==='72')chipsNow+=s.jp72})}
     chipsNow=Math.max(0,chipsNow);CS[i]=chipsNow;
-    setHTML(e.pt,`<div class="nm">${esc(p.nick)}${isMe?' (dig)':''}</div><div class="cn">${esc(CHARS[i].name)}</div>${s.leader&&p.uid===s.leader?'<span class="lead-badge">Leder</span>':''}<div class="ch">${fmt(chipsNow)}</div>`);
+    setHTML(e.pt,`<div class="nm">${esc(p.nick)}${isMe?' (dig)':''}</div><div class="cn">${esc(CHARS[i].name)}</div>${s.leader&&p.uid===s.leader?'<span class="lead-badge">Leder</span>':''}<div class="ch">${fmt(chipsNow)}</div>${headsHTML(s,p)}`);
     setHTML(e.timer,turn?`<div class="timer"><i data-turnat="${h.turnAt}" data-bank="${bankLeft(s,p.uid)}"></i><span></span></div>`:'');
     let bubble='';const say=h?.say;
     const rx=REACTS_SHOWN[i];
@@ -1495,6 +1582,7 @@ function render(){
   $('adminSlot').innerHTML='';
   renderLead();
   renderChat();
+  renderFinale();
   tickTimers();
   renderDock();
   scheduleNext();
@@ -1659,7 +1747,7 @@ function renderLead(){
   const s=S||emptyState();
   const players=s.seats.map((p,i)=>p?{i,p}:null).filter(Boolean);
   const reqs=Object.keys(s.requests||{}).map(uid=>({uid,i:s.seats.findIndex(p=>p?.uid===uid)})).filter(r=>r.i>=0);
-  const key=JSON.stringify([s.sb,s.bb,s.stack,s.paused,s.jpRoyal,s.jp72,s.rit,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,busy]);
+  const key=JSON.stringify([s.sb,s.bb,s.stack,s.paused,s.jpRoyal,s.jp72,s.rit,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,armFin,busy]);
   if(key===leadKey)return;leadKey=key;
   // keep anything the leader is typing
   const keep={};el.querySelectorAll('input').forEach(x=>{if(x.value!==x.defaultValue)keep[x.id]=x.value});
@@ -1667,7 +1755,7 @@ function renderLead(){
   el.innerHTML=`
     <div class="lead-head">
       <div><h2>${chipSvg.replace('class="chip"','class="chip" style="width:22px;height:22px"')} Lederpanel</h2><div class="lead-sub">Kun du kan se det her · du har oprettet bordet</div></div>
-      <button class="btn small ${s.paused?'go':'ghost'}" id="pauseBtn" ${busy?'disabled':''}>${s.paused?'Slut kaffemik':'Kaffemik-pause'}</button>
+      <div class="row"><button class="btn small ${armFin?'raise':'ghost'}" id="finaleBtn" ${busy?'disabled':''}>${armFin?'Sikker? Tryk igen':'🏁 Afslut aftenen'}</button><button class="btn small ${s.paused?'go':'ghost'}" id="pauseBtn" ${busy?'disabled':''}>${s.paused?'Slut kaffemik':'Kaffemik-pause'}</button></div>
     </div>
     ${reqs.map(r=>`<div class="preq"><span><b>${esc(s.seats[r.i].nick)}</b> er busted og beder om ${fmt(s.requests[r.uid].amount||s.stack)} chips${s.seats[r.i].rebuys?` (har købt ind ${s.seats[r.i].rebuys} gang${s.seats[r.i].rebuys>1?'e':''} før)`:''}.</span><div class="row"><button class="btn tiny go" data-lead="grant" data-seat="${r.i}" ${busy?'disabled':''}>Ok, giv ${fmt(s.requests[r.uid].amount||s.stack)}</button><button class="btn tiny ghost" data-lead="deny" data-seat="${r.i}" ${busy?'disabled':''}>Afvis</button></div></div>`).join('')}
     <div class="plist">
@@ -1732,6 +1820,11 @@ document.addEventListener('click',e=>{
   if(t.dataset.preset){setRaise(+t.dataset.preset);return}
   if(t.dataset.lead){leadAction(t.dataset.lead,+t.dataset.seat);return}
   if(t.id==='pauseBtn'){send('pause');return}
+  if(t.id==='finaleBtn'){if(!armFin){armFin=true;leadKey='';renderLead();setTimeout(()=>{armFin=false;leadKey='';renderLead()},4000);return}armFin=false;send('finale');return}
+  if(t.id==='volBtn'){const v=$('volPanel');v.hidden=!v.hidden;if(!v.hidden)renderVol();render();return}
+  if(t.id==='volClose'){$('volPanel').hidden=true;render();return}
+  if(t.id==='finSkip'){finNext();return}
+  if(t.id==='finClose'){closeFinale();return}
   if(t.dataset.rit!=null){send('rit',{yes:t.dataset.rit==='1'});return}
   if(t.dataset.react!=null){sock.emit('react',{i:+t.dataset.react});return}
   if(t.dataset.throw!=null){throwPick=+t.dataset.throw;renderReacts();return}
@@ -1791,6 +1884,173 @@ function setRaise(v){const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n
 document.addEventListener('input',e=>{if(e.target.id==='raiseRange'||e.target.id==='raiseNum')setRaise(+e.target.value)});
 addEventListener('resize',()=>{if(S)render();else layoutSeats()});
 
+/* ---------- v6: gags, commentator, sound settings and the final show ---------- */
+let armFin=false;
+const nickOf=i=>S?.seats[i]?.nick||CHARS[i]?.name||'Nogen';
+const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+function decoHTML(s,h,i,p,reveal){let d='';
+  if(p.ears>0)d+='<i class="d-ears" title="Dum abe 🐒"></i>';
+  if(p.curse>0)d+='<i class="d-curse" title="Forbandet af tupilakken">👹</i>';
+  if(p.tilt)d+='<i class="d-steam" title="Tilt!">♨️</i>';
+  if(h&&reveal&&h.fx){if(h.fx.some(f=>f.t==='nose'&&f.seat===i))d+='<i class="d-nose" title="Pinocchio"></i>';
+    if(h.fx.some(f=>f.t==='chicken'&&f.seat===i))d+='<i class="d-stamp" title="Kujon">🐔</i>'}
+  return d}
+function headsHTML(s,p){const hs=s.stats?.[p.uid]?.heads||[];if(!hs.length)return'';
+  return `<div class="heads" title="Hovedjæger: ${hs.length} trofæ${hs.length>1?'er':''}">${hs.slice(-6).map(k=>avatar(k)).join('')}${hs.length>6?`<small>+${hs.length-6}</small>`:''}</div>`}
+
+/* events from the server: play each once, end-of-hand ones when the cards are revealed */
+const FXSEEN=new Set();let fxInit=false;
+const FX_END=new Set(['bomb','nose','narwhal','curse','tilt','bust','head','chicken']);
+function handleFx(){const h=S?.hand;
+  if(!fxInit){fxInit=true;(h?.fx||[]).forEach((f,k)=>FXSEEN.add(h.id+':'+k));return}
+  (h?.fx||[]).forEach((f,k)=>{const key=h.id+':'+k;if(FXSEEN.has(key)||FX_END.has(f.t))return;FXSEEN.add(key);queueGag(f)})}
+function runEndFx(h){(h.fx||[]).forEach((f,k)=>{const key=h.id+':'+k;if(FXSEEN.has(key))return;FXSEEN.add(key);queueGag(f)})}
+const GAGQ=[];let gagBusy=false;
+function queueGag(f){GAGQ.push(f);if(GAGQ.length>6)GAGQ.splice(0,GAGQ.length-6);if(!gagBusy)nextGag()}
+function nextGag(){gagBusy=true;if(aiBusy||!$('finale').hidden){setTimeout(nextGag,700);return}
+  const f=GAGQ.shift();if(!f){gagBusy=false;return}
+  let d=2800;try{d=playGag(f)||2800}catch(e){console.error(e)}setTimeout(nextGag,d+250)}
+function seatXY(i){const st=SE[i]?.seat;if(!st)return{x:innerWidth/2,y:innerHeight/2};const el=[...st.querySelectorAll('.av,.s-av,.plate')].find(e=>e.getBoundingClientRect().width>0)||st;const r=el.getBoundingClientRect();return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:{x:innerWidth/2,y:innerHeight/2}}
+function gag(html,dur,bg=''){const el=document.createElement('div');el.className='gag';el.style.setProperty('--d',dur/1000+'s');el.innerHTML=(bg?`<div class="g-bg" style="background:${bg}"></div>`:'')+html;document.body.appendChild(el);setTimeout(()=>el.remove(),dur);return el}
+function fly(host,inner,from,to,{delay=0,dur=900,size=56,spin=540,arc=-140}={}){const e=document.createElement('span');e.className='g-fly';e.innerHTML=inner;e.style.cssText=`left:${from.x}px;top:${from.y}px;font-size:${size}px`;host.appendChild(e);
+  const dx=to.x-from.x,dy=to.y-from.y;
+  e.animate([{transform:'translate(-50%,-50%) rotate(0deg)'},{transform:`translate(calc(-50% + ${dx/2}px),calc(-50% + ${dy/2+arc}px)) rotate(${spin/2}deg)`,offset:.5},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) rotate(${spin}deg)`}],{duration:RM()?1:dur,delay,fill:'both'});return e}
+const ttl=(big,small,c='#ffd23f')=>`<div class="g-title" style="--c:${c}"><b>${big}</b>${small?`<small>${esc(small)}</small>`:''}</div>`;
+const flakes=n=>Array.from({length:LITE?Math.round(n/3):n},(_,k)=>`<i class="g-flake" style="top:${(k*37)%100}%;left:${(k*53)%100}%;animation-duration:${.6+((k*7)%10)/12}s;animation-delay:${-((k*13)%10)/10}s"></i>`).join('');
+
+/* original little tunes, all synthesized */
+const MUS={
+  jingle(){SFX.as('music',()=>{const G=[196,247,294],C=[262,330,392],D=[294,370,440],b=.42;
+    [G,G,C,G,D,D,G,G].forEach((ch,k)=>{SFX.tone(ch[0]/2,.32,.12,k*b,'triangle');ch.forEach((f,j)=>SFX.tone(f,.28,.035,k*b+b/2+j*.018,'triangle'));SFX.noise(.03,3200,1,.06,k*b+b/2)});
+    const mel=[[392,0,.2],[494,.21,.2],[587,.42,.4],[587,.84,.2],[659,1.05,.2],[587,1.26,.4],[494,1.68,.4],[392,2.1,.4],[440,2.52,.2],[494,2.73,.2],[440,2.94,.4],[370,3.36,.4],[392,3.78,.8]];
+    mel.forEach(([f,t,d])=>{SFX.tone(f,d+.08,.05,t,'square');SFX.tone(f*1.004,d+.08,.04,t,'sawtooth')})})},
+  sad(){SFX.as('music',()=>{[[233,220,.55,0],[220,208,.55,.6],[208,196,.55,1.2]].forEach(([a,b,d,t])=>{SFX.slide(a,b,d,.12,'sawtooth',t);SFX.slide(a/2,b/2,d,.06,'triangle',t)});
+    for(let k=0;k<8;k++)SFX.slide(k%2?190:200,k%2?200:190,.2,.12,'sawtooth',1.8+k*.2)})},
+  drums(n=6){SFX.as('music',()=>{for(let k=0;k<n;k++){SFX.slide(110,60,.25,.4,'sine',k*.3);SFX.noise(.12,180,.6,.5,k*.3)}})},
+  fanfare(){SFX.as('music',()=>{[[523,0,.18],[523,.2,.18],[523,.4,.18],[659,.6,.5],[587,1.15,.18],[659,1.35,.18],[784,1.55,.9]].forEach(([f,t,d])=>{SFX.tone(f,d,.07,t,'square');SFX.tone(f/2,d,.05,t,'triangle')})})},
+  drumroll(){SFX.as('music',()=>{for(let k=0;k<14;k++)SFX.noise(.05,300,.7,.25,k*.06);SFX.tone(784,.35,.07,.9,'square');SFX.tone(1047,.5,.06,1.02,'square')})},
+  race(){SFX.as('music',()=>{const ch=[[262,330,392],[349,440,523],[392,494,587],[262,330,392]];let t=0;
+    for(let bar=0;bar<8;bar++){const c=ch[bar%4];for(let k=0;k<8;k++){SFX.tone(k%2?c[0]:c[0]/2,.12,.06,t,'triangle');SFX.tone(c[(k*2)%3]*2,.1,.035,t+.06,'square');t+=.17}}})}};
+
+/* the commentator */
+const CAST={
+  ape:['Ajorpoq! {n} callede med skrald. Det er en abe, mine damer og herrer!','Bananer til {n}! Det call kommer på årets værste-liste.','{n} kiggede på kortene og tænkte: Hvorfor ikke? Dum abe!'],
+  gambler:['{n} skubber det hele ind på ren bøn. Know when to fold them!','Cowboy-tid! {n} går all-in med næsten ingenting.'],
+  shaman:['Shamanen har set ind i fremtiden. Spådommen er forseglet til aftenens afslutning.'],
+  seal:['Min-raise igen? {n}, du er en nærig sæl!'],
+  bomb:['{n} smed en atombombe for at vinde et par blinds. Pft.'],
+  nose:['Taget i bluff! Se næsen på {n} vokse!'],
+  narwhal:['Riveren! {n} får en narhval lige i ryggen!','Naamik! {n} var foran, men riveren sagde nej.'],
+  curse:['Tupilakken har slået til! {n} tabte med {p} procent. Forbandet!'],
+  tilt:['Fire tab i træk. {n} koger over. Tilt-alarm!'],
+  bust:['{n} er flad og går op på fjeldet. Farvel, qivittoq.'],
+  head:['{n} tager {o}s hoved med hjem. Hovedjæger!'],
+  chicken:['Bok bok! {n} foldede en hånd, der ville have vundet. Kujon!']};
+function caster(f){const L=CAST[f.t];if(!L)return;
+  const line=L[Math.floor(Math.random()*L.length)].replace(/\{n\}/g,f.seat!=null?nickOf(f.seat):'').replace(/\{p\}/g,f.pct!=null?Math.round(f.pct):'').replace(/\{o\}/g,f.of!=null?CHARS[f.of].name:'');
+  say(line)}
+function say(line){const el=$('caster');el.innerHTML=`🎙️ ${esc(line)}`;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(say.t);say.t=setTimeout(()=>el.classList.remove('show'),5200);speak(line)}
+function speak(t){try{if(!SFX.on||!(SFX.vol.voice>0)||!('speechSynthesis' in window))return;
+  const u=new SpeechSynthesisUtterance(t.replace(/[^\p{L}\p{N}\s.,!?%'-]/gu,''));u.lang='da-DK';
+  const v=speechSynthesis.getVoices().find(v=>/^da/i.test(v.lang));if(v)u.voice=v;u.volume=Math.min(1,SFX.vol.voice);u.rate=1.08;u.pitch=1.05;
+  if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();speechSynthesis.speak(u)}catch{}}
+
+function playGag(f){const n=f.seat!=null?nickOf(f.seat):'',to=f.seat!=null?seatXY(f.seat):{x:innerWidth/2,y:innerHeight/2};caster(f);
+  switch(f.t){
+  case 'ape':{const g=gag(`<div class="g-vine"><span>🐒</span></div>${ttl('Dum abe 🐒',`${n} gik med på en lortehånd (${Math.round(f.pct)} %)`,'#e0a872')}`,3400,'radial-gradient(circle,rgba(61,92,42,.25),rgba(5,10,21,.55))');
+    fly(g,'🍌',{x:innerWidth*.18,y:innerHeight*.42},to,{delay:900,dur:900,size:54,spin:900});
+    SFX.as('fx',()=>{[0,.16,.32].forEach(d=>SFX.slide(420,820,.13,.13,'square',d));[.55,.7].forEach(d=>SFX.slide(700,1300,.12,.12,'square',d));SFX.splat&&setTimeout(()=>SFX.splat(),1800)});return 3400}
+  case 'gambler':{gag(`<div class="g-weed"></div><div class="g-hat">🤠</div>${ttl("Know when to fold 'em",`${n} gik all-in med ${Math.round(f.pct)} % chance`,'#ffb347')}`,6000,'radial-gradient(circle at 50% 60%,rgba(233,190,120,.35),rgba(58,36,18,.75))');MUS.jingle();return 6000}
+  case 'shaman':{gag(`<div class="g-mid g-pop">🔮</div>${ttl('Shamanen har talt','Spådommen for aftenen er forseglet til afslutningen','#b892ff')}`,3800,'radial-gradient(circle,rgba(120,80,200,.35),rgba(5,10,21,.75))');MUS.drums(6);return 3800}
+  case 'seal':{const g=gag(ttl('Nærig sæl 🦭',`${n} har min-raiset tre gange`,'#a8dde6'),3000);const from={x:innerWidth+80,y:innerHeight*.75};
+    fly(g,'🦭',from,{x:innerWidth*.72,y:innerHeight*.7},{dur:700,spin:0,arc:-20,size:80});fly(g,'🪙',{x:innerWidth*.72,y:innerHeight*.66},to,{delay:900,dur:800,size:40,spin:720});
+    SFX.as('fx',()=>{[0,.25].forEach(d=>SFX.slide(300,160,.22,.2,'square',d));SFX.chip(1.7)});return 3000}
+  case 'bomb':{const g=gag(`<div class="g-puff">pft 💨</div>${ttl('Overkill 💣',`${n} smed en atombombe for at vinde blinds`,'#ff5a3c')}`,3400);
+    fly(g,'💣',{x:innerWidth/2,y:-80},{x:innerWidth/2,y:innerHeight*.52},{dur:1200,spin:30,arc:0,size:140});
+    SFX.as('fx',()=>{SFX.slide(1800,300,1.2,.06,'sine');SFX.noise(.25,700,.5,.25,1.3)});return 3400}
+  case 'nose':{gag(ttl('Pinocchio 🤥',`${n} blev taget i et bluff`,'#e8b47e'),2700);SFX.as('fx',()=>{SFX.slide(180,900,.35,.14,'sine');SFX.slide(900,300,.3,.1,'sine',.35);SFX.slide(300,700,.25,.08,'sine',.65)});return 2700}
+  case 'narwhal':{const g=gag(ttl('Narhval i ryggen',`${n} blev rivered`,'#8fdde0'),3200);
+    const nar=`<svg width="190" height="70" viewBox="0 0 190 70"><path d="M98 34 L188 30 L98 38Z" fill="#f4f1ea"/><path d="M110 33 l6 2 M125 33 l6 2 M140 32 l6 2 M155 32 l6 2" stroke="#c9bfa8" stroke-width="2"/><ellipse cx="60" cy="38" rx="44" ry="22" fill="#7f97ad"/><ellipse cx="62" cy="46" rx="34" ry="11" fill="#c9d6e2"/><path d="M18 38 L0 20 L6 40 L0 58Z" fill="#6c849a"/><circle cx="88" cy="32" r="3.5" fill="#111"/><path d="M78 46 Q86 50 94 44" stroke="#111" stroke-width="2" fill="none"/></svg>`;
+    fly(g,nar,{x:-200,y:to.y},to,{dur:1100,spin:0,arc:-40,size:16});SFX.as('fx',()=>{SFX.whoosh();SFX.noise(.2,500,.8,.9,1.05);SFX.tone(140,.2,.2,1.05,'square')});return 3200}
+  case 'curse':{gag(`<div class="g-tup"><svg viewBox="0 0 100 140"><use href="#tup"/></svg></div>${ttl('Tupilak-forbandelsen 👹',`${n} tabte med ${f.pct} % chance. Forbandet i 3 hænder`,'#5cf2a8')}`,4000,'radial-gradient(circle,rgba(92,242,168,.3),rgba(0,0,0,.9) 65%)');
+    const a=document.querySelector('.app');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');setTimeout(()=>a.classList.remove('shake'),1800);
+    SFX.as('fx',()=>{SFX.slide(700,140,2.4,.12,'triangle');SFX.slide(55,48,3,.25,'sawtooth');SFX.noise(2.5,300,.3,.25,.2)});return 4000}
+  case 'tilt':{gag(`<div class="g-mid g-spin" style="font-size:clamp(70px,12vw,130px)">🚨</div>${ttl('Tilt-alarm 🚨',`${n} har tabt fire puljer i træk`,'#ff3b5c')}`,3000,'transparent').querySelector('.g-bg')?.classList.add('g-red');
+    SFX.as('fx',()=>{for(let k=0;k<4;k++){SFX.slide(650,950,.32,.08,'square',k*.64);SFX.slide(950,650,.32,.08,'square',k*.64+.32)}});return 3000}
+  case 'bust':{gag(`${flakes(80)}<div class="g-walk">${avatar(f.seat)}</div>${ttl('Fjeldet kalder 🏔️',`${n} er flad og går op på fjeldet som en qivittoq`,'#e3f4f7')}`,5600,'linear-gradient(180deg,rgba(150,180,200,.35),rgba(5,10,21,.85))');MUS.sad();return 5600}
+  case 'head':{const g=gag(ttl('Hovedjæger 🎯',`${n} tager ${CHARS[f.of].name}s hoved som trofæ`,'#ff9f43'),3200);
+    fly(g,avatar(f.of),seatXY(f.of),to,{dur:1300,spin:720,size:16,arc:-180});SFX.as('fx',()=>{SFX.whoosh();SFX.tone(523,.2,.08,1.3,'square');SFX.tone(784,.35,.08,1.45,'square')});return 3200}
+  case 'chicken':{gag(ttl('Kujon 🐔',`${n} foldede en hånd, der ville have vundet`,'#ffd23f'),2900);
+    SFX.as('fx',()=>{[0,.2,.4,.75].forEach((d,k)=>{SFX.tone(k===3?900:620,k===3?.3:.1,.1,d,'square');SFX.noise(.06,1500,1,.15,d)})});return 2900}
+  }return 1}
+
+/* sound settings */
+const VOLS=[['fx','Effekter (kort, chips, gags)'],['char','Karakterlyde'],['music','Musik og jingles'],['voice','Kommentator (stemme)']];
+function renderVol(){const el=$('volPanel');
+  el.innerHTML=`<div class="row" style="justify-content:space-between"><h3>🎚️ Lyd</h3><button class="btn small ghost" id="volClose">Luk</button></div>
+    <label style="display:flex;justify-content:space-between"><span>Al lyd</span><input type="checkbox" id="volAll" ${SFX.on?'checked':''} style="width:auto"></label>
+    ${VOLS.map(([k,l])=>`<label>${l}<output id="vo-${k}">${Math.round(SFX.vol[k]*100)}%</output><input type="range" min="0" max="100" step="5" value="${Math.round(SFX.vol[k]*100)}" data-vol="${k}" aria-label="${l}"></label>`).join('')}
+    <small style="color:var(--muted)">Slip skyderen for at høre et eksempel.</small>`}
+function saveVol(){try{localStorage.setItem('nanoq-vol',JSON.stringify(SFX.vol))}catch{}}
+document.addEventListener('input',e=>{const k=e.target.dataset?.vol;if(!k)return;SFX.vol[k]=+e.target.value/100;const o=$('vo-'+k);if(o)o.textContent=e.target.value+'%';saveVol()});
+document.addEventListener('change',e=>{const k=e.target.dataset?.vol;
+  if(e.target.id==='volAll'){SFX.on=e.target.checked;try{localStorage.setItem('nanoq-sound',SFX.on?'1':'0')}catch{}if(SFX.on){SFX.unlock();SFX.chip()}render();return}
+  if(!k)return;SFX.unlock();
+  if(k==='fx')SFX.chip();else if(k==='char')SFX.as('char',()=>WIN_SFX[6]());else if(k==='music')MUS.fanfare();else speak('Aluu! Sådan lyder kommentatoren.')});
+
+/* the final show: awards, the shaman's verdict and a dog-sled race */
+let FIN_SEEN=null,finT=[],finStage=0,finData=null;
+try{FIN_SEEN=+localStorage.getItem('nanoq-fin')||null}catch{}
+function renderFinale(){const el=$('finale'),f=S?.finale;
+  if(!joined||!f||FIN_SEEN===f.at){if(!el.hidden){el.hidden=true;el.innerHTML='';el.dataset.at='';finT.forEach(clearTimeout);finT=[]}return}
+  if(el.dataset.at===String(f.at))return;el.dataset.at=f.at;el.hidden=false;finData=finaleData(S);finStage=0;
+  el.innerHTML=`<div class="fin-box"><div class="fin-head"><h1>🏁 Aftenens prisuddeling</h1><div class="row"><button class="btn small" id="finSkip">Næste ▶</button><button class="btn small ghost" id="finClose">Luk</button></div></div><div id="finStage"></div></div>`;
+  finGo(0)}
+function closeFinale(){const f=S?.finale;if(f){FIN_SEEN=f.at;try{localStorage.setItem('nanoq-fin',f.at)}catch{}}renderFinale()}
+function finNext(){finGo(finStage+1)}
+function finGo(k){finT.forEach(clearTimeout);finT=[];finStage=k;const st=$('finStage');if(!st)return;const D=finData,T=(fn,ms)=>finT.push(setTimeout(fn,ms));
+  const pro=S?.prophecy;
+  if(k===0){st.innerHTML='<div class="fin-grid" id="finGrid"></div>';
+    if(!D.A.length){st.innerHTML='<p>Ingen priser endnu. Spil nogle hænder først!</p>';T(()=>finGo(1),2500);return}
+    D.A.forEach((a,j)=>T(()=>{const g=$('finGrid');if(!g)return;MUS.drumroll();
+      g.insertAdjacentHTML('beforeend',`<div class="fin-card"><span class="ic">${a.ic}</span><span class="t">${esc(a.t)}</span>${a.r.seat>=0?avatar(a.r.seat):''}<span class="n">${esc(a.r.nick)}</span><span class="d">${esc(a.d)}</span></div>`);
+      speak(`${a.t}: ${a.r.nick}`);if(j===0)confetti(.5)},j*2200+400));
+    T(()=>finGo(1),D.A.length*2200+2600);return}
+  if(k===1){if(!pro){finGo(2);return}
+    const w=D.rows[0],fish=D.rows.length>1?D.rows[D.rows.length-1]:null;
+    const okW=w&&pro.win.uid===w.uid,okF=fish&&fish.res<0&&pro.fish.uid===fish.uid;
+    st.innerHTML=`<div class="fin-shaman"><span class="orb">🔮</span><p>Shamanen spåede ved aftenens start…</p><div id="sh1"></div><div id="sh2"></div><div id="sh3"></div></div>`;MUS.drums(8);
+    T(()=>{$('sh1').innerHTML=`<p class="v">Vinder: ${esc(pro.win.nick)} ${okW?'✅':'❌'}</p>`;speak(`Shamanen spåede, at ${pro.win.nick} ville vinde. ${okW?'Det passede!':'Det passede ikke.'}`)},1600);
+    T(()=>{$('sh2').innerHTML=`<p class="v">Dagens torsk: ${esc(pro.fish.nick)} ${okF?'✅':'❌'}</p>`},5200);
+    T(()=>{const both=okW&&okF,none=!okW&&!okF;$('sh3').innerHTML=`<p>${both?'Shamanen ser alt. Frygt ham. 🙇':none?'Shamanen har vist drukket for meget kaffemik. ☕':'Halvt rigtigt. Shamanen er tilfreds.'}</p>`;if(okW||okF)MUS.fanfare()},7400);
+    T(()=>finGo(2),10500);return}
+  if(k===2){const top=D.rows.slice(0,3);if(!top.length){finGo(3);return}
+    st.innerHTML=`<h2 style="margin:0 0 6px">🛷 Hundeslæderace for aftenens top ${top.length}</h2><div class="race">${top.map((r,j)=>`<div class="lane"><span class="nm">${esc(r.nick)}</span><div class="sled" id="sled${j}">🛷${r.seat>=0?avatar(r.seat):''}<span class="dogs">🐕🐕🐕</span></div><span class="goal"></span></div>`).join('')}</div><div class="podium" id="podium"></div>`;
+    MUS.race();say('Og de er afsted! Hundeslæderne suser mod målstregen!');
+    top.forEach((r,j)=>{const el=$('sled'+j),lane=el.parentElement,dist=lane.clientWidth-el.offsetWidth-18;
+      const mids=[[.3,.55,.8],[.45,.6,.82],[.25,.65,.78]][j%3];const dur=5200+j*700;
+      el.animate([{transform:'translate(0,-50%)'},{transform:`translate(${dist*mids[0]}px,-50%)`,offset:.3},{transform:`translate(${dist*mids[1]}px,-50%)`,offset:.6},{transform:`translate(${dist*mids[2]}px,-50%)`,offset:.85},{transform:`translate(${dist}px,-50%)`}],{duration:RM()?1:dur,fill:'forwards',easing:'ease-in-out'})});
+    T(()=>{const m=['🥇','🥈','🥉'];$('podium').innerHTML=top.map((r,j)=>`<div style="animation-delay:${j*.3}s"><span class="m">${m[j]}</span>${r.seat>=0?avatar(r.seat):''}<span>${esc(r.nick)}</span><small>${r.res>=0?'+':''}${fmt(r.res)}</small></div>`).join('');
+      confetti(1);MUS.fanfare();say(`${top[0].nick} vinder aftenen! Qujanaq for spillet, alle sammen.`)},5200+(top.length-1)*700+400);return}
+  st.innerHTML=`<p style="font-size:20px;font-weight:700;text-align:center">Qujanaq for i aften! 🇬🇱 Tryk på Luk for at se bordet igen.</p>`}
+function finaleData(s){const L=s.ledger||{},stt=s.stats||{};
+  const rows=Object.keys(L).map(uid=>{const l=L[uid],i=s.seats.findIndex(p=>p?.uid===uid),p=i>=0?s.seats[i]:null;return{uid,nick:l.nick,seat:i>=0?i:l.seat,res:l.cash+(p?p.chips:0)-l.in,st:stt[uid]||{}}}).sort((a,b)=>b.res-a.res);
+  const maxBy=(f,min=0)=>{let b=null,v=min;rows.forEach(r=>{const x=f(r);if(x>v){v=x;b=r}});return b?[b,v]:null};
+  const A=[];let m;
+  if(rows.length)A.push({ic:'👑',t:'Aftenens høvding',r:rows[0],d:`${rows[0].res>=0?'+':''}${fmt(rows[0].res)} chips`});
+  if(rows.length>1&&rows[rows.length-1].res<0)A.push({ic:'🐟',t:'Dagens torsk',r:rows[rows.length-1],d:`${fmt(rows[rows.length-1].res)} chips`});
+  if(m=maxBy(r=>r.st.biggest||0))A.push({ic:'💰',t:'Største pulje',r:m[0],d:`${fmt(m[1])} chips`});
+  if(m=maxBy(r=>r.st.ape||0))A.push({ic:'🐒',t:'Aftenens abe',r:m[0],d:`${m[1]} dum${m[1]>1?'me':''} call${m[1]>1?'s':''}`});
+  if(m=maxBy(r=>r.st.badbeat?.pct||0))A.push({ic:'👹',t:'Værste bad beat',r:m[0],d:`Tabte med ${m[1]} % chance`});
+  if(m=maxBy(r=>(r.st.heads||[]).length))A.push({ic:'🎯',t:'Hovedjæger',r:m[0],d:`${m[1]} hoved${m[1]>1?'er':''}`});
+  if(m=maxBy(r=>r.st.ckn||0))A.push({ic:'🐔',t:'Største kujon',r:m[0],d:`Foldede ${m[1]} vinderhånd${m[1]>1?'er':''}`});
+  if(m=maxBy(r=>r.st.nose||0))A.push({ic:'🤥',t:'Pinocchio',r:m[0],d:`Taget i bluff ${m[1]} gang${m[1]>1?'e':''}`});
+  if(m=maxBy(r=>r.st.tilts||0))A.push({ic:'🚨',t:'Tilt-kongen',r:m[0],d:`${m[1]} tilt-alarm${m[1]>1?'er':''}`});
+  if(m=maxBy(r=>r.st.gambler||0))A.push({ic:'🤠',t:'Aftenens cowboy',r:m[0],d:`${m[1]} vanvittige all-ins`});
+  if(m=maxBy(r=>r.st.b72||0))A.push({ic:'🐟',t:'Torskekongen',r:m[0],d:`${m[1]} gevinst${m[1]>1?'er':''} med 7-2`});
+  if(m=maxBy(r=>r.st.tank||0,4999))A.push({ic:'👻',t:'Qivittoq',r:m[0],d:`${Math.round(m[1]/1000)} sek. i tanken`});
+  return{rows,A}}
+
 /* ---------- boot ---------- */
 $('castStrip').innerHTML=CHARS.map((c,i)=>`<div class="castc">${avatar(i)}<b>${esc(c.name)}</b><span>${esc(c.title)}</span></div>`).join('');
 $('avDefs').innerHTML=AV_DEFS;
@@ -1806,7 +2066,7 @@ function joinRoom(){
 sock=io({transports:['websocket','polling']});
 sock.on('connect',joinRoom);
 sock.on('disconnect',()=>{$('conn').hidden=false});
-sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();turnAlert();
+sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();handleFx(prev);turnAlert();
   // somebody just shoved: their character makes an entrance
   if(prev?.hand&&S.hand&&prev.hand.id===S.hand.id)S.seats.forEach((p,i)=>{if(p&&p.inHand&&p.allin&&!prev.seats[i]?.allin&&prev.seats[i]?.uid===p.uid)queueAllin(i)})});
 sock.on('connect',()=>{$('conn').hidden=true});

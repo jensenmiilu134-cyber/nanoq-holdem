@@ -52,6 +52,8 @@ function viewFor(room, pid) {
   if (s.hand) { delete s.hand.bd; delete s.hand.rest; delete s.hand.bd2; }
   s.now = Date.now();
   s.code = room.code;
+  // the shaman's prophecy stays sealed until the final show
+  if (!s.finale) { s.prophecySealed = !!s.prophecy; delete s.prophecy; }
   return s;
 }
 function broadcast(room) {
@@ -198,6 +200,7 @@ function handle(room, pid, isLeader, m) {
     case 'pause': {
       if (!isLeader) return 'Kun lederen kan sætte på pause.';
       s.paused = !s.paused;
+      if (!s.paused) s.finale = null;
       G.log(s, s.paused ? 'Lederen satte spillet på pause.' : 'Lederen startede spillet igen.');
       return;
     }
@@ -208,6 +211,18 @@ function handle(room, pid, isLeader, m) {
       if (!(jr >= 0 && jr <= 1e9 && j72 >= 0 && j72 <= 1e9)) return 'Jackpot-beløbene skal være 0 eller mere.';
       Object.assign(s, { sb, bb, stack: st, jpRoyal: jr, jp72: j72, rit: !!m.rit });
       G.log(s, `Lederen satte blinds ${sb}/${bb}, startchips ${G.fmt(st)}, Royal flush-jackpot ${G.fmt(jr)}, 7-2-bonus ${G.fmt(j72)} pr. spiller, run it twice ${m.rit ? 'til' : 'fra'}.`);
+      return;
+    }
+    case 'finale': {
+      if (!isLeader) return 'Kun lederen kan afslutte aftenen.';
+      if (h && G.BETTING.includes(h.phase)) return 'Vent til hånden er færdig.';
+      s.finale = { at: Date.now() }; s.paused = true;
+      G.log(s, '🏁 Lederen afsluttede aftenen. Prisuddelingen begynder!');
+      return;
+    }
+    case 'finaleEnd': {
+      if (!isLeader) return 'Kun lederen kan lukke showet.';
+      s.finale = null;
       return;
     }
     case 'reset': {

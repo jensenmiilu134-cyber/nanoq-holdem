@@ -118,7 +118,7 @@ function nextIdx(s,from,pred){for(let k=1;k<=N;k++){const i=((from+k)%N+N)%N;if(
 function put(p,amt){amt=Math.min(amt,p.chips);p.chips-=amt;p.bet+=amt;p.total+=amt;if(p.chips===0)p.allin=true;return amt}
 const is72=cards=>{const r=dec(cards).map(c=>c%13).sort((a,b)=>a-b);return r.length===2&&r[0]===0&&r[1]===5};
 function stat(s,uid){const st=s.stats[uid]||(s.stats[uid]={won:0,biggest:0,royal:0,b72:0});
-  for(const k of ['hands','raises','tank','slow'])st[k]=st[k]||0;return st}
+  for(const k of ['hands','raises','tank','slow','ape','ckn','nose','seal','tilts','busts','streak','gambler'])st[k]=st[k]||0;st.heads=st.heads||[];return st}
 const BANK_MS=60000,SLOW_MS=15000;
 const bankOf=(s,uid)=>{s.bank=s.bank||{};if(s.bank[uid]==null)s.bank[uid]=(s.bankSec??60)*1000;return s.bank[uid]};
 function ledger(s,p){const L=s.ledger||(s.ledger={});const l=L[p.uid]||(L[p.uid]={nick:p.nick,seat:-1,in:0,cash:0});l.nick=p.nick;return l}
@@ -129,7 +129,7 @@ function startHand(s){
   s.seats=s.seats.map(p=>{if(p&&p.leaving){cashOut(s,p);return null}return p});
   const players=s.seats.map((p,i)=>eligible(p)?i:-1).filter(i=>i>=0);
   if(players.length<2)return false;
-  s.seats.forEach(p=>{if(p)Object.assign(p,{inHand:false,bet:0,total:0,folded:false,allin:false,acted:false,hole:''})});
+  s.seats.forEach(p=>{if(p){Object.assign(p,{inHand:false,bet:0,total:0,folded:false,allin:false,acted:false,hole:''});if(p.curse>0)p.curse--;if(p.ears>0)p.ears--}});
   const dealer=nextIdx(s,s.dealer<0?N-1:s.dealer,eligible);
   s.dealer=dealer;
   const deck=shuffled();
@@ -141,9 +141,12 @@ function startHand(s){
   const heads=players.length===2;
   const sbSeat=heads?dealer:nextIdx(s,dealer,p=>p?.inHand);
   const bbSeat=nextIdx(s,sbSeat,p=>p?.inHand);
-  put(s.seats[sbSeat],s.sb);put(s.seats[bbSeat],s.bb);
+  const posted={};posted[sbSeat]=put(s.seats[sbSeat],s.sb);posted[bbSeat]=(posted[bbSeat]||0)+put(s.seats[bbSeat],s.bb);
   s.hand={id:Math.random().toString(36).slice(2,10),phase:'preflop',board:[],bd:enc(board),rest:enc(deck.slice(k+5)),
-    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{},think:{}};
+    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{},think:{},fx:[],posted,raised:{},minr:{},foldAt:{},aggr:-1,overbet:-1};
+  // the shaman's prophecy for the night, sealed until the final show
+  if(!s.prophecy){const u=players.map(i=>({uid:s.seats[i].uid,nick:s.seats[i].nick}));const a=crypto.randomInt(u.length);let b=crypto.randomInt(u.length-1);if(b>=a)b++;
+    s.prophecy={win:u[a],fish:u[b],at:Date.now()};s.hand.fx.push({t:'shaman'});log(s,'🔮 Shamanen har talt. Spådommen for aftenen er forseglet.')}
   log(s,`Hånd #${s.hand.no}: ${nick(s,dealer)} giver. Blinds ${nick(s,sbSeat)} ${s.sb} / ${nick(s,bbSeat)} ${s.bb}.`);
   s.hand.toAct=bbSeat;
   advance(s,bbSeat);
@@ -168,6 +171,9 @@ function advance(s,from){
     // all-in: the hands are turned face up, TV style, with the chance to win
     h.open=Object.fromEntries(L.map(i=>[i,dec(s.seats[i].hole)]));
     h.eqs=[{n:h.board.length,eq:equity(h.open,h.board)}];
+    L.forEach(i=>{const e=h.eqs[0].eq[i],pct=e.w+e.t,p=s.seats[i],st=stat(s,p.uid);
+      if(i===h.aggr&&p.allin){if(pct<30){h.fx.push({t:'gambler',seat:i,pct});st.gambler++;log(s,`🤠 ${p.nick} gik all-in med ${Math.round(pct)} % chance. Know when to fold 'em…`)}}
+      else if(pct<25){h.fx.push({t:'ape',seat:i,pct});st.ape++;p.ears=2;log(s,`🐒 Dum abe! ${p.nick} gik med på en lortehånd (${Math.round(pct)} %).`)}});
   }
   if(bettingOver&&h.phase!=='river'&&s.rit&&!h.ritDone){
     h.prevPhase=h.phase;h.phase='rit';h.toAct=-1;h.ritVotes={};h.ritAt=Date.now();h.ritSeats=L;
@@ -229,7 +235,9 @@ function award(s,w){
   s.seats.forEach(p=>{if(p)p.bet=0});
   log(s,`${nick(s,w)} vinder ${fmt(pot)} – alle andre foldede.`);
   const st=stat(s,s.seats[w].uid);st.won++;st.biggest=Math.max(st.biggest,pot);
+  if(h.overbet===w){h.fx.push({t:'bomb',seat:w});log(s,`💣 Overkill! ${nick(s,w)} smed en atombombe for at vinde ${fmt(pot)}.`)}
   pay72(s,[w]);
+  finish(s,[w]);
 }
 
 /* split the pot into side pots and pay each to the best hand on one board */
@@ -286,7 +294,40 @@ function showdown(s){
   // the most painful loss: a big pot lost with a decent hand
   L.filter(i=>!won[i]).forEach(i=>{const sc=r0.evals[i].score;if(sc[0]<2)return;const st=stat(s,s.seats[i].uid),amt=tot[i];
     if(!st.ouch||amt>st.ouch.amt)st.ouch={amt,hand:handName(sc)}});
+  // bluffed, got caught: Pinocchio
+  L.filter(i=>!won[i]&&h.raised[i]&&r0.evals[i].score[0]===0).forEach(i=>{h.fx.push({t:'nose',seat:i});stat(s,s.seats[i].uid).nose++;log(s,`🤥 ${nick(s,i)} blev taget i et bluff. Næsen vokser.`)});
+  // rivered or bad beat: what was the loser's chance before the last cards?
+  if(!h.twice&&L.length>=2){
+    const holes=Object.fromEntries(L.map(i=>[i,dec(s.seats[i].hole)])),full=dec(h.bd);
+    const at=n=>{const e=h.eqs?.find(x=>x.n===n);return e?e.eq:equity(holes,full.slice(0,n))};
+    const eq3=at(3),eq4=at(4),eq0=h.eqs?.find(x=>x.n===0)?.eq;
+    L.filter(i=>!won[i]).forEach(i=>{const p=s.seats[i],st=stat(s,p.uid);
+      const pc=e=>e&&e[i]?e[i].w+e[i].t:0;const peak=Math.max(pc(eq0),pc(eq3),pc(eq4));
+      if(peak>=80){p.curse=3;h.fx.push({t:'curse',seat:i,pct:Math.round(peak)});log(s,`👹 Tupilak-forbandelsen! ${p.nick} tabte med ${Math.round(peak)} % chance.`);
+        if(!st.badbeat||peak>st.badbeat.pct)st.badbeat={pct:Math.round(peak),amt:tot[i],hand:handName(r0.evals[i].score)}}
+      else if(pc(eq4)>50){h.fx.push({t:'narwhal',seat:i});log(s,`🦄 Narhval i ryggen! ${p.nick} blev rivered.`)}});
+  }
   pay72(s,winners.map(w=>w.seat));
+  finish(s,winners.map(w=>w.seat));
+}
+
+/* after every hand: tilt streaks, busts, head hunting and the chicken who folded a winner */
+function finish(s,winSeats){
+  const h=s.hand,res=h.result;
+  const amt=i=>(res.winners.find(w=>w.seat===i)?.amount||0);
+  const top=[...winSeats].sort((a,b)=>amt(b)-amt(a))[0];
+  const full=dec(h.bd);
+  const beat=winSeats.map(w=>eval7([...dec(s.seats[w].hole),...full]));
+  s.seats.forEach((p,i)=>{if(!p||!p.inHand)return;const st=stat(s,p.uid);
+    const vol=p.total-(h.posted?.[i]||0)>0;
+    if(winSeats.includes(i)){st.streak=0;p.tilt=false}
+    else if(vol){st.streak++;if(st.streak===4){p.tilt=true;st.tilts++;h.fx.push({t:'tilt',seat:i});log(s,`🚨 Tilt-alarm! ${p.nick} har tabt fire puljer i træk.`)}}
+    if(p.chips===0&&!p.leaving){st.busts++;h.fx.push({t:'bust',seat:i});log(s,`🏔️ ${p.nick} er flad og går op på fjeldet.`);
+      if(top!=null&&top!==i){const ht=stat(s,s.seats[top].uid);ht.heads.push(i);h.fx.push({t:'head',seat:top,of:i});log(s,`🎯 ${nick(s,top)} tager ${CHARS[i].name}s hoved som trofæ.`)}}
+    if(p.folded&&!h.twice&&full.length===5&&(vol||h.foldAt?.[i]&&h.foldAt[i]!=='preflop')){
+      const mine=eval7([...dec(p.hole),...full]);
+      if(beat.length&&beat.every(v=>mine>v)){st.ckn++;h.fx.push({t:'chicken',seat:i});log(s,`🐔 Kujon! ${p.nick} foldede en hånd, der ville have vundet.`)}}
+  });
 }
 
 /* 7-2 bounty: everyone else at the table pays whoever wins a pot holding 7-2 */
@@ -326,17 +367,19 @@ function act(s,seat,kind,to){
   {const st=stat(s,p.uid);if(think>10000)st.tank+=think-10000;
    if(think>TURN_MS){s.bank=s.bank||{};s.bank[p.uid]=Math.max(0,bankOf(s,p.uid)-(think-TURN_MS))}}
   const potNow=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
-  if(kind==='fold'){p.folded=true;log(s,`${p.nick} folder.`)}
+  if(kind==='fold'){p.folded=true;h.foldAt=h.foldAt||{};h.foldAt[seat]=h.phase;log(s,`${p.nick} folder.`)}
   else if(kind==='check'){if(toCall>0)return false;log(s,`${p.nick} checker.`)}
   else if(kind==='call'){if(toCall<=0)return false;const a=put(p,toCall);log(s,`${p.nick} ${p.allin?'går all-in med':'synker'} ${fmt(a)}.`)}
   else if(kind==='raise'){
     const max=p.bet+p.chips;to=Math.min(Math.floor(to),max);
     if(to<=h.curBet)return false;
     if(to<h.curBet+h.minRaise&&to<max)return false;
-    const size=to-h.curBet;
+    const size=to-h.curBet,isMin=to===h.curBet+h.minRaise&&to<max&&h.curBet>0;
     if(potNow+toCall>0)h.fracs[seat]=Math.round(size/(potNow+toCall)*100)/100;
     if(size>=h.minRaise){h.minRaise=size;s.seats.forEach((q,i)=>{if(i!==seat&&canAct(q))q.acted=false})}
     h.curBet=to;put(p,to-p.bet);stat(s,p.uid).raises++;
+    if(h.raised){h.raised[seat]=1;h.aggr=seat;h.overbet=p.allin&&size>=10*Math.max(1,potNow)?seat:-1;
+      if(isMin){h.minr[seat]=(h.minr[seat]||0)+1;if(h.minr[seat]===3){stat(s,p.uid).seal++;h.fx.push({t:'seal',seat});log(s,`🦭 Nærig sæl! ${p.nick} har min-raiset tre gange.`)}}}
     log(s,`${p.nick} ${p.allin?'går all-in til':(toCall>0?'hæver til':'byder')} ${fmt(to)}.`);
   } else return false;
   p.acted=true;
