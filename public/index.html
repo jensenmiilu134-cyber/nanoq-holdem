@@ -424,6 +424,12 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 @keyframes eqPop{0%{transform:translate(-50%,-62%) scale(.6)}100%{transform:translate(-50%,-62%) scale(1)}}
 /* bet size as a share of the pot */
 .bet .frac{font-style:normal;font-family:var(--f-label);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--flag);color:var(--snow);padding:0 6px;border-radius:999px}
+.actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+.actions .btn{font-size:20px;padding:14px 10px}
+.btn.check{background:var(--aurora)}
+.cw.ghostc .card.front{filter:grayscale(.7) brightness(.62);opacity:.8}
+.ghostnote{display:block;font-family:var(--f-label);font-size:12px;letter-spacing:.06em;text-transform:none;color:var(--muted);margin-top:4px}
+@media (max-width:700px){.actions{grid-template-columns:1fr 1fr}}
 .fracline{font-family:var(--f-label);font-size:14px;letter-spacing:.04em;color:var(--glacier)}
 .fracline b{color:var(--snow)}
 .presets{display:flex;gap:6px;flex-wrap:wrap}
@@ -877,12 +883,12 @@ function handInfo(hole,board,s){
     const [a,b]=hole,r1=Math.max(a%13,b%13),r2=Math.min(a%13,b%13),suited=Math.floor(a/13)===Math.floor(b/13);
     const sc=chen(a,b),is72=r1===5&&r2===0;
     const rate=is72?'Den legendariske 7-2 😈':sc>=12?'Monster 🔥':sc>=10?'Premium':sc>=8?'Stærk':sc>=6?'Spilbar':sc>=4?'Tvivlsom':'Torsk-hånd 🐟';
-    return{name:r1===r2?'Lommepar':rate,detail:r1===r2?`Par i ${RN_PL[r1]} fra start · ${rate}`:`${RN_1[r1]}-${RN_1[r2]}${suited?' i samme kulør':''}${is72&&s.jp72>0?' · vind med den og få 7-2-bonus!':''}`,
+    return{name:r1===r2?'Lommepar':'Højt kort',detail:r1===r2?`Par i ${RN_PL[r1]}`:`${RN_1[r1]}-${RN_1[r2]}${suited?' i samme kulør':''}`,
       seg:Math.max(1,Math.min(9,Math.round(sc/20*9))),best:[],draws:[],odds:null}}
   const known=[...hole,...board],cur=eval7(known),cc=cur>>20;
   const b5=best(known).cards;
   const out={name:cc===8&&((cur>>16)&15)===12?'Royal flush':HAND_NAMES[cc],detail:describe(cur),seg:cc+1,best:b5,draws:[],odds:null};
-  if(board.length<5){
+  if(false){
     const seen=new Set(known),unseen=[...Array(52).keys()].filter(c=>!seen.has(c));
     const by={},str=new Set();let any=0;
     for(const c of unseen){const nc=eval7([...known,c])>>20;if(nc<=cc)continue;if(nc<=(eval7([...board,c])>>20))continue;
@@ -1320,7 +1326,8 @@ function render(){
   ensureCenter();
   // new board cards come out one street at a time; results wait until the last card has turned
   const twoRuns=!!(h?.result?.runs);
-  const boards=[h?.board||[],twoRuns?h.result.runs[1].board:null];
+  const ghost=h?.phase==='showdown'&&CE.revealed&&CE.hid===h.id?(h.result?.ghost||[]):[];
+  const boards=[[...(h?.board||[]),...ghost],twoRuns?h.result.runs[1].board:null];
   let t=0,revealIn=0;
   const placeBoard=(slots,cards,winSet,base)=>{
     let tt=base;
@@ -1350,7 +1357,7 @@ function render(){
   {const pend=CE.visAt.filter((t,i)=>boards[0]?.[i]!=null&&t>nowT);clearTimeout(CE.vt);if(pend.length)CE.vt=setTimeout(render,Math.min(...pend)-nowT+40)}
   const meP=ms>=0?s.seats[ms]:null;
   const myBest=(meP&&meP.inHand&&!meP.folded&&(h?.board||[]).length>=3&&!reveal&&dec(meP.hole).length===2)?new Set(best([...dec(meP.hole),...h.board.slice(0,Math.max(3,visN))]).cards):new Set();
-  CE.slots.forEach((el,i)=>{const cw=el.firstElementChild;if(cw&&cw.classList.contains('cw'))cw.classList.toggle('hl',myBest.has(boards[0]?.[i]))});
+  CE.slots.forEach((el,i)=>{const cw=el.firstElementChild;if(cw&&cw.classList.contains('cw')){cw.classList.toggle('hl',myBest.has(boards[0]?.[i]));cw.classList.toggle('ghostc',ghost.includes(boards[0]?.[i]))}});
   let eqNow=null;if(h?.eqs&&!reveal){for(const e of h.eqs)if(e.n<=visN)eqNow=e}
   const winCards=reveal?new Set([...runWin(0),...(twoRuns?runWin(1):[])]):new Set();
   const phaseName={preflop:'Preflop',flop:'Flop',turn:'Turn',river:'River',showdown:reveal?'Opgør':'…',rit:'Run it twice?'}[h?.phase]||'Venter på spillere';
@@ -1359,7 +1366,7 @@ function render(){
   if(reveal&&h.result){
     const w=h.result.winners;
     const runsTxt=twoRuns?`<span>${h.result.runs.map((r,k)=>`Run ${k+1}: ${r.winners.map(x=>esc(nick(s,x.seat))).join(' & ')} · ${esc(r.winners[0]?.hand||'')}`).join('<br>')}</span>`:`<span>${esc(w[0].hand||'Alle andre foldede')}</span>`;
-    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}${runsTxt}<em>“${esc(CHARS[w[0].seat].win)}”</em></div>`;
+    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}${runsTxt}<em>“${esc(CHARS[w[0].seat].win)}”</em>${ghost.length?'<small class="ghostnote">Grå kort = det, der ville være kommet</small>':''}</div>`;
   } else if(h?.phase==='rit'){
     const v=h.ritVotes||{};banner=`<div class="banner rit-banner">Run it twice?<span>${(h.ritSeats||[]).map(i=>`${esc(nick(s,i))}: ${v[i]===undefined?'…':v[i]?'to gange':'én gang'}`).join(' · ')}</span></div>`;
   }
@@ -1495,11 +1502,12 @@ function renderDock(){
     const halfTo=Math.min(maxTo,Math.max(minTo,h.curBet+Math.floor((pot+toCall)/2)));
     const toFor=f=>Math.min(maxTo,Math.max(minTo,h.curBet+Math.round(f*(pot+toCall))));
     const canRaise=maxTo>h.curBet;
-    dock.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Din tur</h2><span class="status">${toCall>0?`${fmt(toCall)} at synke`:'Ingen bud at matche'}</span></div>
+    dock.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Din tur</h2><span class="status">${toCall>0?`${fmt(toCall)} at calle`:'Ingen bud at matche'}</span></div>
       <div class="actions">
         <button class="btn fold" data-act="fold" ${busy?'disabled':''}>Fold</button>
-        ${toCall>0?`<button class="btn call" data-act="call" ${busy?'disabled':''}>${toCall>=p.chips?'All-in':'Synk'} ${fmt(toCall)}</button>`:`<button class="btn call" data-act="check" ${busy?'disabled':''}>Check</button>`}
-        ${canRaise?`<button class="btn raise raise-main" data-act="raise" ${busy?'disabled':''}><span id="raiseLbl">${h.curBet>0?'Hæv til':'Byd'} ${fmt(minTo)}</span></button>`:''}
+        <button class="btn check" data-act="check" ${busy||toCall>0?'disabled':''}>Check</button>
+        <button class="btn call" data-act="call" ${busy||toCall<=0?'disabled':''}>${toCall>=p.chips&&toCall>0?'All-in':'Call'}${toCall>0?` ${fmt(toCall)}`:''}</button>
+        <button class="btn raise" data-act="raise" ${busy||!canRaise?'disabled':''}><span id="raiseLbl">${h.curBet>0?'Raise til':'Bet'} ${fmt(minTo)}</span></button>
         ${canRaise&&maxTo>minTo?`<div class="raisebox"><div class="row"><input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${minTo}" aria-label="Beløb"><input type="number" id="raiseNum" min="${minTo}" max="${maxTo}" value="${minTo}" style="width:110px" aria-label="Beløb i chips"></div>
           <div class="fracline" id="fracLine">${fracText(minTo)}</div>
           <div class="presets"><button class="btn small ghost" data-preset="${minTo}">Min</button>${[['⅓',1/3],['½',.5],['⅔',2/3],['Pulje',1],['2× pulje',2]].map(([l,f])=>`<button class="btn small ghost" data-preset="${toFor(f)}">${l}</button>`).join('')}<button class="btn small ghost" data-preset="${maxTo}">All-in</button></div></div>`:''}
@@ -1548,8 +1556,7 @@ function renderHud(s,h,ms){
   const info=handInfo(hole,vis,s);if(!info){el.hidden=true;return}
   el.hidden=false;
   setHTML(el,`<div><div class="lbl">Din hånd</div><div class="hn">${esc(info.name)}</div></div><div class="hd">${esc(info.detail)}</div>
-    <div class="meter" aria-hidden="true">${Array.from({length:9},(_,k)=>`<i class="${k<info.seg?'on':''}"></i>`).join('')}</div>
-    ${info.draws.length||info.odds?`<div class="draws">${info.draws.map(d=>`<span class="${d.big?'big':''}">${esc(d.txt)}</span>`).join('')}${info.odds?`<span class="odds">${esc(info.odds)}</span>`:''}</div>`:vis.length===5?'<div class="draws"><span>Alle kort er ude</span></div>':''}`)}
+`)}
 function renderBoardLb(s,CS,reveal){
   const el=$('lbBox');const L=s.ledger||{};const ids=Object.keys(L);
   if(!joined||!ids.length){el.hidden=true;return}el.hidden=false;
@@ -1676,7 +1683,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click()});
 function fracText(v){const h=S?.hand,p=S?.seats[mySeat()];if(!h||!p)return'';const pot=S.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0),toCall=Math.max(0,h.curBet-p.bet);
   const f=(v-h.curBet)/Math.max(1,pot+toCall);return `${h.curBet>0?'Hævningen':'Buddet'} er <b>${fracLabel(f)}</b> <span style="opacity:.7">(${Math.round(f*100)}% af ${fmt(pot+toCall)})</span>`}
-function setRaise(v){const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Hæv til':'Byd'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
+function setRaise(v){const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Raise til':'Bet'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
 document.addEventListener('input',e=>{if(e.target.id==='raiseRange'||e.target.id==='raiseNum')setRaise(+e.target.value)});
 addEventListener('resize',()=>{if(S)render();else layoutSeats()});
 

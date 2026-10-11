@@ -221,7 +221,8 @@ function award(s,w){
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   s.seats[w].chips+=pot;
   h.phase='showdown';h.toAct=-1;h.finishedAt=Date.now();
-  h.result={winners:[{seat:w,amount:pot,hand:''}],shown:{},jackpots:[]};
+  // the cards that would have come, shown greyed out once the hand is over
+  h.result={winners:[{seat:w,amount:pot,hand:''}],shown:{},jackpots:[],ghost:dec(h.bd).slice(h.board.length,5)};
   s.seats.forEach(p=>{if(p)p.bet=0});
   log(s,`${nick(s,w)} vinder ${fmt(pot)} – alle andre foldede.`);
   const st=stat(s,s.seats[w].uid);st.won++;st.biggest=Math.max(st.biggest,pot);
