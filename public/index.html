@@ -631,7 +631,8 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 .heads{display:flex;gap:1px;justify-content:center;margin-top:2px;flex-wrap:wrap;max-width:110px}
 .heads .av{--w:16px;margin:0}
 .caster{position:fixed;left:50%;bottom:18px;transform:translate(-50%,160%);z-index:70;max-width:min(92vw,720px);background:rgba(5,10,21,.94);border:1px solid var(--aurora);color:#fff;padding:10px 16px;border-radius:14px;font-weight:700;font-size:15px;line-height:1.35;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.2,.4,1);pointer-events:none}
-.caster.show{transform:translate(-50%,0)}
+.caster{opacity:0;visibility:hidden;transition:transform .35s cubic-bezier(.2,1.2,.4,1),opacity .25s,visibility 0s .35s}
+.caster.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .35s cubic-bezier(.2,1.2,.4,1),opacity .2s,visibility 0s}
 .volpanel{position:fixed;right:16px;top:64px;z-index:85;background:#0d1b2c;border:1px solid var(--line);border-radius:16px;padding:14px;width:min(300px,calc(100vw - 32px));box-shadow:0 18px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:10px}
 .volpanel h3{margin:0;font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em}
 .volpanel label{display:grid;grid-template-columns:1fr 46px;gap:2px 8px;font-size:14px;font-weight:600;align-items:center}
@@ -705,6 +706,44 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
   .dock .corner-note .d{display:none}.dock .corner-note .m{display:inline}
 }
 .on-landing #actbar,.tv #actbar{display:none!important}
+/* v8: easier controls */
+@media (min-width:701px){.actbar{width:min(420px,calc(100vw - 32px))}}
+.ab-main{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px}
+.ab-main .btn{min-height:72px;font-size:19px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.05;padding:8px 6px;position:relative}
+.ab-main .btn .ic{font-size:22px;line-height:1}
+.ab-main .btn small{font-family:var(--f-body,inherit);font-size:13px;letter-spacing:0;text-transform:none;font-weight:700;opacity:.85}
+.ab-main .btn.go{font-size:23px;box-shadow:0 0 0 3px rgba(92,242,168,.35),0 8px 22px rgba(92,242,168,.25)}
+.ab-main .btn.go.call{box-shadow:0 0 0 3px rgba(120,200,255,.35),0 8px 22px rgba(120,200,255,.25)}
+.ab-main .btn.fold{border:2px solid rgba(255,120,120,.55);color:#ffb3b3}
+.ab-main .btn.fold.armed{background:#c8233a;color:#fff;border-color:#c8233a;animation:armPulse .6s ease-in-out infinite alternate}
+@keyframes armPulse{to{filter:brightness(1.25)}}
+.ab-main .btn.raise.open{box-shadow:0 0 0 3px #ffd23f inset}
+.kb{position:absolute;top:4px;right:6px;font-size:10px;font-family:var(--f-label,monospace);letter-spacing:.05em;opacity:.6;border:1px solid currentColor;border-radius:4px;padding:0 3px;line-height:1.3}
+@media (pointer:coarse){.kb{display:none}}
+.ab-quick .btn{min-height:46px;font-size:15px}
+.ab-quick .btn b{display:block;font-size:12px;opacity:.75;letter-spacing:0}
+.ab-step{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center}
+.ab-step .btn{min-height:52px;font-size:26px;padding:0}
+.ab-step .amt{text-align:center;font-family:var(--f-display);font-size:28px;font-weight:800}
+.ab-step .amt small{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0;font-family:inherit}
+.actbar input[type=range]{height:34px;accent-color:#ffd23f}
+.actbar input[type=range]::-webkit-slider-thumb{width:30px;height:30px}
+.actbar .raisebox .btn.raise{min-height:60px;font-size:20px}
+.actbar .btn:focus-visible{outline:3px solid #ffd23f;outline-offset:2px}
+.ab-hint{font-size:12px;color:var(--muted);text-align:center}
+.ab-hint kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11px}
+.actbar .preacts .btn{min-height:54px;font-size:15px}
+.actbar .preacts .btn.on::before{content:'✓ '}
+body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:54;box-shadow:inset 0 0 0 4px rgba(92,242,168,.55),inset 0 0 60px rgba(92,242,168,.18);animation:turnGlow 1.4s ease-in-out infinite alternate}
+@keyframes turnGlow{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){body.myturn::after{animation:none}.ab-main .btn.fold.armed{animation:none}}
+@media (max-width:700px){
+  .ab-main .btn{min-height:64px;font-size:16px}
+  .ab-main .btn.go{font-size:19px}
+  .ab-hint{display:none}
+  .has-actbar .app{padding-bottom:240px}
+  .has-actbar .caster{bottom:230px}
+}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -1276,7 +1315,7 @@ function soundsFor(prev,next){
   if(pot(next)>pot(prev))SFX.chip();
   if(next.seats.some((p,i)=>p?.folded&&!prev.seats[i]?.folded))SFX.fold();
   /* win sounds play when the cards are revealed (see celebrate) */
-  if(ms>=0&&b.toAct===ms&&(a.toAct!==ms||a.phase!==b.phase)&&b.phase!=='showdown')SFX.turn();
+  if(ms>=0&&b.toAct===ms&&(a.toAct!==ms||a.phase!==b.phase)&&b.phase!=='showdown'){SFX.turn();try{navigator.vibrate?.([60,40,60])}catch{}}
 }
 /* when it is your turn and the tab is in the background, the tab title blinks */
 let blinkT=null;const BASE_TITLE=document.title;
@@ -1660,7 +1699,7 @@ function renderDock(){
   }
   if(betting&&h.toAct===ms){
     const key=`turn${h.id}${busy}`;if(key===lastBarKey)return;lastBarKey=key;
-    dock.innerHTML=`<div class="row corner-note" style="justify-content:space-between"><h2>Din tur</h2><span class="status"><span class="d">Dine knapper ligger i hjørnet nederst til højre ↘</span><span class="m">Dine knapper ligger nederst ↓</span>${KEYS_OK?' · Genveje: <kbd>F</kbd> fold · <kbd>C</kbd> check/call · <kbd>R</kbd> raise':''}</span></div>`;
+    dock.innerHTML=`<div class="row corner-note" style="justify-content:space-between"><h2>Din tur</h2><span class="status"><span class="d">Dine knapper ligger i hjørnet nederst til højre ↘</span><span class="m">Dine knapper ligger nederst ↓</span>${KEYS_OK?' · Genveje: <kbd>Mellemrum</kbd> check/call · <kbd>F</kbd> fold · <kbd>R</kbd> raise · <kbd>1</kbd>–<kbd>3</kbd> hurtig-raise':''}</span></div>`;
     return;
   }
   // waiting states
@@ -1842,11 +1881,16 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.act){
     const kind=t.dataset.act;let to=0;
+    if(kind==='fold'&&t.closest('#actbar')){const h=S?.hand,p=S?.seats[mySeat()];
+      if(h&&p&&h.curBet<=p.bet&&!FOLD_ARM){FOLD_ARM=true;ACT_KEY='';renderActbar();toast('Du kan checke gratis. Tryk Fold igen for at folde alligevel.');clearTimeout(foldT);foldT=setTimeout(()=>{FOLD_ARM=false;ACT_KEY='';renderActbar()},3500);return}
+      FOLD_ARM=false;clearTimeout(foldT)}
+    try{navigator.vibrate?.(15)}catch{}
     if(kind==='raise'){to=+(t.dataset.to||$('raiseNum')?.value||0)}
     send('act',{kind,to,handId:S?.hand?.id});return;
   }
   if(t.dataset.preset){setRaise(+t.dataset.preset);return}
-  if(t.dataset.qraise){send('act',{kind:'raise',to:+t.dataset.qraise,handId:S?.hand?.id});return}
+  if(t.dataset.step){stepRaise(+t.dataset.step);return}
+  if(t.dataset.qraise){try{navigator.vibrate?.(15)}catch{}send('act',{kind:'raise',to:+t.dataset.qraise,handId:S?.hand?.id});return}
   if(t.dataset.rtoggle!=null){RAISE_OPEN=!RAISE_OPEN;ACT_KEY='';renderActbar();if(RAISE_OPEN)$('raiseRange')?.focus();return}
   if(t.dataset.lead){leadAction(t.dataset.lead,+t.dataset.seat);return}
   if(t.id==='pauseBtn'){send('pause');return}
@@ -1885,21 +1929,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeI
   if(e.key==='Enter'&&e.target.id==='chatIn'){e.preventDefault();sendChat();return}
   if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
   const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable)&&tg.type!=='range')return;
-  const k=e.key.toLowerCase();if(!['f','c','r'].includes(k))return;
+  let k=e.key.toLowerCase();if(k===' '||k==='spacebar')k='c';if(k==='escape'&&RAISE_OPEN){RAISE_OPEN=false;ACT_KEY='';renderActbar();return}
+  if(!['f','c','r','1','2','3','arrowup','arrowdown','enter'].includes(k))return;
+  if(k==='enter'&&!RAISE_OPEN)return;
   const h=S?.hand,ms=mySeat();if(!h||ms<0||h.toAct!==ms||!['preflop','flop','turn','river'].includes(h.phase))return;
   const q=a=>{const b=document.querySelector(`#actbar [data-act="${a}"]`);return b&&!b.disabled?b:null};
   const tog=document.querySelector('#actbar [data-rtoggle]:not([disabled])');
-  const b=k==='f'?q('fold'):k==='c'?(q('check')||q('call')):(RAISE_OPEN?q('raise'):(tog||q('raise')));
+  if(k==='arrowup'||k==='arrowdown'){if(RAISE_OPEN){e.preventDefault();stepRaise(k==='arrowup'?1:-1)}return}
+  if('123'.includes(k)){const qb=document.querySelectorAll('#actbar [data-qraise]:not([disabled])')[+k-1];if(qb){e.preventDefault();qb.click()}return}
+  const b=k==='f'?q('fold'):k==='c'?(q('check')||q('call')):k==='enter'?q('raise'):(RAISE_OPEN?q('raise'):(tog||q('raise')));
   if(b){e.preventDefault();b.click()}});
 const KEYS_OK=matchMedia('(pointer:fine)').matches;
 /* ---------- the action panel: corner on a computer, bottom bar on a phone ---------- */
-let RAISE_OPEN=false,ACT_KEY='',RAISE_FOR='';
+let RAISE_OPEN=false,ACT_KEY='',RAISE_FOR='',FOLD_ARM=false,foldT=null;
 function renderActbar(){
   const el=$('actbar');const s=S,ms=mySeat(),h=s?.hand,p=ms>=0&&s?s.seats[ms]:null;
   const betting=h&&['preflop','flop','turn','river'].includes(h.phase);
   let mode='none';
   if(joined&&p&&betting&&p.inHand&&!p.folded&&!TV){if(h.toAct===ms)mode='turn';else if(!p.allin&&!p.sitout&&p.chips>0)mode='pre'}
-  document.body.classList.toggle('has-actbar',mode!=='none');
+  document.body.classList.toggle('has-actbar',mode!=='none');document.body.classList.toggle('myturn',mode==='turn');
   if(mode==='none'){if(!el.hidden){el.hidden=true;el.innerHTML=''}ACT_KEY='';RAISE_OPEN=false;return}
   const hole=dec(p.hole);
   const mini=hole.length===2?`<span class="ab-cards" aria-label="Dine kort">${hole.map(c=>`<b class="${[1,2].includes(Math.floor(c/13))?'red':''}">${cardTxt(c)}</b>`).join('')}</span>`:'';
@@ -1907,29 +1955,34 @@ function renderActbar(){
     const pa=PRE&&PRE.hid===h.id?PRE.kind:'',need=h.curBet>p.bet;
     const key=`pre${h.id}${pa}${need}${hole.join()}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
     el.innerHTML=`<div class="ab-in ab-mini"><div class="ab-head"><span class="lbl">Forvalg · venter på ${esc(nick(s,h.toAct))}</span>${mini}</div>
-      <div class="preacts" role="group" aria-label="Vælg på forhånd"><button class="btn small ${pa==='cf'?'on':''}" data-pre="cf" aria-pressed="${pa==='cf'}">${need?'Fold':'Check/fold'}</button><button class="btn small ${pa==='any'?'on':''}" data-pre="any" aria-pressed="${pa==='any'}">Call alt</button>${need?'':`<button class="btn small ${pa==='check'?'on':''}" data-pre="check" aria-pressed="${pa==='check'}">Check</button>`}</div></div>`;
+      <div class="preacts" role="group" aria-label="Vælg på forhånd"><button class="btn small ${pa==='cf'?'on':''}" data-pre="cf" aria-pressed="${pa==='cf'}">${need?'Fold':'Check/fold'}</button><button class="btn small ${pa==='any'?'on':''}" data-pre="any" aria-pressed="${pa==='any'}">Call alt${need?` ${fmt(Math.min(h.curBet-p.bet,p.chips))}`:''}</button>${need?'':`<button class="btn small ${pa==='check'?'on':''}" data-pre="check" aria-pressed="${pa==='check'}">Check</button>`}</div></div>`;
     return}
   const toCall=Math.min(h.curBet-p.bet,p.chips);
   const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips,canRaise=maxTo>h.curBet,slider=canRaise&&maxTo>minTo;
-  const spot=`${h.id}${h.phase}${h.curBet}`;if(RAISE_FOR!==spot){RAISE_FOR=spot;RAISE_OPEN=false}
-  const key=`turn${spot}${p.bet}${busy}${RAISE_OPEN}${bankLeft(s,p.uid)}${h.turnAt}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
+  const spot=`${h.id}${h.phase}${h.curBet}`;if(RAISE_FOR!==spot){RAISE_FOR=spot;RAISE_OPEN=false;FOLD_ARM=false}
+  const key=`turn${spot}${p.bet}${busy}${RAISE_OPEN}${FOLD_ARM}${bankLeft(s,p.uid)}${h.turnAt}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
   const pot=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
   const toFor=f=>Math.min(maxTo,Math.max(minTo,h.curBet+Math.round(f*(pot+toCall))));
   const quick=[['½ pulje',toFor(.5)],['Pulje',toFor(1)],['All-in',maxTo]].filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i);
+  const kb=k=>KEYS_OK?`<span class="kb">${k}</span>`:'';
+  const goLbl=toCall>0?(toCall>=p.chips?'All-in':'Call'):'Check';
+  const rl=h.curBet>0?'Raise':'Bet';
   el.innerHTML=`<div class="ab-ring" data-turnat="${h.turnAt}" data-bank="${bankLeft(s,p.uid)}"><div class="ab-in">
-    <div class="ab-head"><b>Din tur</b>${mini}<span class="ab-st">${toCall>0?`${fmt(toCall)} at calle`:'Ingen bud'}</span><span class="ab-clock"></span></div>
-    <div class="ab-btns">
-      <button class="btn fold" data-act="fold" ${busy?'disabled':''}>Fold</button>
-      <button class="btn check" data-act="check" ${busy||toCall>0?'disabled':''}>Check</button>
-      <button class="btn call" data-act="call" ${busy||toCall<=0?'disabled':''}>${toCall>=p.chips&&toCall>0?'All-in':'Call'}${toCall>0?` ${fmt(toCall)}`:''}</button>
-      ${slider?`<button class="btn raise" data-rtoggle aria-expanded="${RAISE_OPEN}" ${busy?'disabled':''}>${RAISE_OPEN?'Luk ▾':(h.curBet>0?'Raise ▸':'Bet ▸')}</button>`
-        :`<button class="btn raise" data-act="raise" data-to="${maxTo}" ${busy||!canRaise?'disabled':''}>${canRaise?`All-in ${fmt(maxTo)}`:'Raise'}</button>`}
+    <div class="ab-head"><b>Din tur</b>${mini}<span class="ab-st">${toCall>0?`${fmt(toCall)} at calle`:'Gratis at checke'}</span><span class="ab-clock"></span></div>
+    <div class="ab-main" role="group" aria-label="Dine handlinger">
+      <button class="btn fold ${FOLD_ARM?'armed':''}" data-act="fold" ${busy?'disabled':''} aria-keyshortcuts="F" aria-label="${FOLD_ARM?'Bekræft fold':'Fold'}">${kb('F')}<span class="ic">✕</span>${FOLD_ARM?'Sikker?':'Fold'}${FOLD_ARM?'<small>tryk igen</small>':''}</button>
+      <button class="btn go ${toCall>0?'call':'check'}" data-act="${toCall>0?'call':'check'}" ${busy?'disabled':''} aria-keyshortcuts="C Space" aria-label="${goLbl}${toCall>0?' '+toCall:''}">${kb("␣")}<span class="ic">${toCall>0?'●':'✓'}</span>${goLbl}${toCall>0?`<small>${fmt(toCall)}</small>`:''}</button>
+      ${slider?`<button class="btn raise ${RAISE_OPEN?'open':''}" data-rtoggle aria-expanded="${RAISE_OPEN}" ${busy?'disabled':''} aria-keyshortcuts="R">${kb('R')}<span class="ic">▲</span>${RAISE_OPEN?'Luk':rl}<small>${RAISE_OPEN?'skjul':'vælg beløb'}</small></button>`
+        :`<button class="btn raise" data-act="raise" data-to="${maxTo}" ${busy||!canRaise?'disabled':''} aria-keyshortcuts="R">${kb('R')}<span class="ic">▲</span>${canRaise?'All-in':rl}${canRaise?`<small>${fmt(maxTo)}</small>`:''}</button>`}
     </div>
-    ${slider?`<div class="ab-quick">${quick.map(([l,v])=>`<button class="btn small ghost" data-qraise="${v}" title="${h.curBet>0?'Raise til':'Bet'} ${fmt(v)}" ${busy?'disabled':''}>${l}</button>`).join('')}</div>`:''}
-    ${slider&&RAISE_OPEN?`<div class="raisebox"><div class="row"><input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${minTo}" aria-label="Beløb"><input type="number" id="raiseNum" min="${minTo}" max="${maxTo}" value="${minTo}" style="width:96px" aria-label="Beløb i chips"></div>
-      <div class="fracline" id="fracLine">${fracText(minTo)}</div>
-      <div class="presets"><button class="btn small ghost" data-preset="${minTo}">Min</button>${[['⅓',1/3],['⅔',2/3],['2×',2]].map(([l,f])=>`<button class="btn small ghost" data-preset="${toFor(f)}">${l}</button>`).join('')}</div>
-      <button class="btn raise" data-act="raise" ${busy?'disabled':''}><span id="raiseLbl">${h.curBet>0?'Raise til':'Bet'} ${fmt(minTo)}</span></button></div>`:''}
+    ${slider?`<div class="ab-quick" role="group" aria-label="Hurtig ${rl.toLowerCase()}">${quick.map(([l,v],i)=>`<button class="btn small ghost" data-qraise="${v}" aria-keyshortcuts="${i+1}" aria-label="${rl} ${l}, ${v}" ${busy?'disabled':''}>${KEYS_OK?`<span class="kb">${i+1}</span>`:''}${l}<b>${fmt(v)}</b></button>`).join('')}</div>`:''}
+    ${slider&&RAISE_OPEN?`<div class="raisebox">
+      <div class="ab-step"><button class="btn ghost" data-step="-1" aria-label="Mindre">−</button><div class="amt"><span id="raiseBig">${fmt(minTo)}</span><small id="fracLine">${fracText(minTo)}</small></div><button class="btn ghost" data-step="1" aria-label="Mere">+</button></div>
+      <input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${minTo}" aria-label="Beløb">
+      <input type="hidden" id="raiseNum" value="${minTo}">
+      <div class="presets"><button class="btn small ghost" data-preset="${minTo}">Min</button>${[['⅓',1/3],['⅔',2/3],['2×',2]].map(([l,f])=>`<button class="btn small ghost" data-preset="${toFor(f)}">${l} pulje</button>`).join('')}<button class="btn small ghost" data-preset="${maxTo}">All-in</button></div>
+      <button class="btn raise" data-act="raise" ${busy?'disabled':''} aria-keyshortcuts="Enter"><span id="raiseLbl">${rl==='Raise'?'Raise til':'Bet'} ${fmt(minTo)}</span></button></div>`:''}
+    ${KEYS_OK?`<div class="ab-hint"><kbd>Mellemrum</kbd> ${goLbl.toLowerCase()} · <kbd>F</kbd> fold · <kbd>R</kbd> ${rl.toLowerCase()}${slider?' · <kbd>1</kbd>–<kbd>3</kbd> hurtig · <kbd>↑</kbd><kbd>↓</kbd> beløb':''}</div>`:''}
   </div></div>`;
   tickRing()}
 /* ---------- pre-selected actions (when it is not your turn) ---------- */
@@ -1951,7 +2004,8 @@ function setTV(on){TV=on;document.documentElement.classList.toggle('tv',on);if(o
 document.documentElement.classList.toggle('tv',TV);
 function fracText(v){const h=S?.hand,p=S?.seats[mySeat()];if(!h||!p)return'';const pot=S.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0),toCall=Math.max(0,h.curBet-p.bet);
   const f=(v-h.curBet)/Math.max(1,pot+toCall);return `${h.curBet>0?'Hævningen':'Buddet'} er <b>${fracLabel(f)}</b> <span style="opacity:.7">(${Math.round(f*100)}% af ${fmt(pot+toCall)})</span>`}
-function setRaise(v){const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Raise til':'Bet'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
+function stepRaise(d){const r=$('raiseRange');if(!r)return;const st=S.bb;let v=Math.round((+r.value+d*st)/st)*st;v=Math.max(+r.min,Math.min(+r.max,v));setRaise(v)}
+function setRaise(v){const big=$('raiseBig');if(big)big.textContent=fmt(+v);const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Raise til':'Bet'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
 document.addEventListener('input',e=>{if(e.target.id==='raiseRange'||e.target.id==='raiseNum')setRaise(+e.target.value)});
 addEventListener('resize',()=>{if(S)render();else layoutSeats()});
 
