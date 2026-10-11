@@ -58,6 +58,9 @@ function broadcast(room) {
   room.s.v = (room.s.v || 0) + 1;
   room.touched = Date.now();
   schedule(room); // sets the next-hand countdown, which every player sees
+  let watching = 0;
+  for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code && !room.s.seats.some((p) => p?.uid === so.data.pid)) watching++;
+  room.s.watching = watching;
   for (const [, sock] of io.of('/').sockets) {
     if (sock.data.code === room.code) sock.emit('state', viewFor(room, sock.data.pid));
   }
@@ -93,15 +96,21 @@ function schedule(room) {
     }, Math.max(0, at - Date.now()));
   } else { room.nextAt = 0; s.nextAt = 0; }
   if (h && BETTING.includes(h.phase) && h.toAct >= 0) {
-    const id = h.id, ta = h.toAct, at = h.turnAt;
+    const id = h.id, ta = h.toAct, at = h.turnAt, tp = s.seats[ta];
+    const bank = tp ? G.bankOf(s, tp.uid) : 0;
+    const deadline = tp?.sitout || tp?.leaving ? Date.now() + 1200 : at + G.TURN_MS + bank;
     room.timers.turn = setTimeout(() => {
       const g = room.s.hand;
       if (!g || g.id !== id || g.toAct !== ta || g.turnAt !== at) return;
       const p = room.s.seats[ta];
-      G.log(room.s, `${p.nick} var for længe om det.`);
+      if (!p.sitout) {
+        G.log(room.s, `${p.nick} var for længe om det.`);
+        p.timeouts = (p.timeouts || 0) + 1;
+        if (p.timeouts >= 2) { p.sitout = true; G.log(room.s, `${p.nick} sidder ude, indtil de er tilbage.`); }
+      }
       G.act(room.s, ta, g.curBet - p.bet > 0 ? 'fold' : 'check', 0);
       broadcast(room);
-    }, Math.max(0, at + G.TURN_MS - Date.now()));
+    }, Math.max(0, deadline - Date.now()));
   }
 }
 
@@ -142,6 +151,13 @@ function handle(room, pid, isLeader, m) {
     case 'act': {
       if (!p || !h || h.id !== m.handId) return 'Hånden er allerede gået videre.';
       if (!G.act(s, me, m.kind, Number(m.to) || 0)) return 'Det træk er ikke tilladt lige nu.';
+      p.timeouts = 0;
+      return;
+    }
+    case 'sitout': {
+      if (!p) return 'Sæt dig først.';
+      p.sitout = !!m.on; p.timeouts = 0;
+      G.log(s, p.sitout ? `${p.nick} sidder ude et øjeblik.` : `${p.nick} er tilbage ved bordet.`);
       return;
     }
     case 'show': {
@@ -236,6 +252,8 @@ io.on('connection', (sock) => {
     sock.data = { code, token, pid: pidFor(room, token) };
     ack?.({ pid: sock.data.pid });
     sock.emit('state', viewFor(room, sock.data.pid));
+    sock.emit('chatlog', room.chat || []);
+    broadcast(room); // tilskuer-tælleren opdateres
   });
   const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemasking!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
     'Er du bange?', 'Fold nu bare', 'Jeg lugter bluff', 'Sikke en torsk 🐟', 'Tag dig sammen', 'Det var dumt', 'Hurtigere, bedstemor!', 'Nice hand… NOT', 'Kom så!', 'GG'];
@@ -252,6 +270,19 @@ io.on('connection', (sock) => {
     lastReact = Date.now();
     const msg = { seat, text, at: Date.now(), to: hasTo ? to : -1, throw: thr };
     for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code) so.emit('react', msg);
+  });
+  sock.on('disconnect', () => { const r = rooms.get(sock.data?.code); if (r) setTimeout(() => broadcast(r), 50); });
+  let lastChat = 0;
+  sock.on('chat', (m) => {
+    const d = sock.data || {}, room = rooms.get(d.code);
+    if (!room || Date.now() - lastChat < 800) return;
+    const seat = room.s.seats.findIndex((p) => p?.uid === d.pid);
+    const text = clean(m?.text, 140);
+    if (seat < 0 || !text) return;
+    lastChat = Date.now();
+    const msg = { seat, nick: room.s.seats[seat].nick, text, at: Date.now() };
+    room.chat = (room.chat || []).concat(msg).slice(-40);
+    for (const [, so] of io.of('/').sockets) if (so.data?.code === room.code) so.emit('chat', msg);
   });
   sock.on('do', (m, ack) => {
     const d = sock.data || {}, room = rooms.get(d.code);

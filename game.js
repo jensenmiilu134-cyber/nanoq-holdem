@@ -111,13 +111,16 @@ function norm(s){if(!Array.isArray(s.seats))s.seats=[];while(s.seats.length<N)s.
   if(s.rit===undefined)s.rit=true;if(s.jpRoyal===undefined)s.jpRoyal=5000;if(s.jp72===undefined)s.jp72=100;s.stats=s.stats||{};s.ledger=s.ledger||{};return s}
 const nick=(s,i)=>s.seats[i]?.nick||'Spiller';
 function log(s,m){s.log.push(m);if(s.log.length>50)s.log=s.log.slice(-50)}
-const eligible=p=>p&&!p.leaving&&p.chips>0;
+const eligible=p=>p&&!p.leaving&&!p.sitout&&p.chips>0;
 const live=p=>p&&p.inHand&&!p.folded;
 const canAct=p=>live(p)&&!p.allin;
 function nextIdx(s,from,pred){for(let k=1;k<=N;k++){const i=((from+k)%N+N)%N;if(pred(s.seats[i],i))return i}return -1}
 function put(p,amt){amt=Math.min(amt,p.chips);p.chips-=amt;p.bet+=amt;p.total+=amt;if(p.chips===0)p.allin=true;return amt}
 const is72=cards=>{const r=dec(cards).map(c=>c%13).sort((a,b)=>a-b);return r.length===2&&r[0]===0&&r[1]===5};
-function stat(s,uid){return s.stats[uid]||(s.stats[uid]={won:0,biggest:0,royal:0,b72:0})}
+function stat(s,uid){const st=s.stats[uid]||(s.stats[uid]={won:0,biggest:0,royal:0,b72:0});
+  for(const k of ['hands','raises','tank','slow'])st[k]=st[k]||0;return st}
+const BANK_MS=60000,SLOW_MS=15000;
+const bankOf=(s,uid)=>{s.bank=s.bank||{};if(s.bank[uid]==null)s.bank[uid]=(s.bankSec??60)*1000;return s.bank[uid]};
 function ledger(s,p){const L=s.ledger||(s.ledger={});const l=L[p.uid]||(L[p.uid]={nick:p.nick,seat:-1,in:0,cash:0});l.nick=p.nick;return l}
 function buyIn(s,p,amt,seat){const l=ledger(s,p);l.in+=amt;if(seat!=null)l.seat=seat}
 function cashOut(s,p){ledger(s,p).cash+=p.chips}
@@ -130,7 +133,7 @@ function startHand(s){
   const dealer=nextIdx(s,s.dealer<0?N-1:s.dealer,eligible);
   s.dealer=dealer;
   const deck=shuffled();
-  players.forEach(i=>s.seats[i].inHand=true);
+  players.forEach(i=>{s.seats[i].inHand=true;stat(s,s.seats[i].uid).hands++});
   let k=0;const order=[];for(let j=1;j<=N;j++){const i=(dealer+j)%N;if(s.seats[i]?.inHand)order.push(i)}
   const holes={};order.forEach(i=>holes[i]=[deck[k++]]);order.forEach(i=>holes[i].push(deck[k++]));
   order.forEach(i=>s.seats[i].hole=enc(holes[i]));
@@ -140,7 +143,7 @@ function startHand(s){
   const bbSeat=nextIdx(s,sbSeat,p=>p?.inHand);
   put(s.seats[sbSeat],s.sb);put(s.seats[bbSeat],s.bb);
   s.hand={id:Math.random().toString(36).slice(2,10),phase:'preflop',board:[],bd:enc(board),rest:enc(deck.slice(k+5)),
-    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{}};
+    curBet:Math.max(s.seats[sbSeat].bet,s.seats[bbSeat].bet,s.bb),minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{},think:{}};
   log(s,`Hånd #${s.hand.no}: ${nick(s,dealer)} giver. Blinds ${nick(s,sbSeat)} ${s.sb} / ${nick(s,bbSeat)} ${s.bb}.`);
   s.hand.toAct=bbSeat;
   advance(s,bbSeat);
@@ -277,6 +280,12 @@ function showdown(s){
     hit.forEach(i=>{s.seats[i].chips+=s.jpRoyal;h.result.jackpots.push({type:'royal',seat:i,amount:s.jpRoyal});stat(s,s.seats[i].uid).royal++;
       log(s,`ROYAL FLUSH JACKPOT! ${nick(s,i)} får ${fmt(s.jpRoyal)} chips fra banken.`)});
   }
+  // slow-roll: sat on a strong winning hand for a long time before the last action
+  h.result.slow=winners.filter(w=>(h.think?.[w.seat]||0)>SLOW_MS&&(r0.evals[w.seat]?.score[0]??0)>=3).map(w=>w.seat);
+  h.result.slow.forEach(i=>{stat(s,s.seats[i].uid).slow++;log(s,`Dårlig stil 🐟 ${nick(s,i)} tænkte længe med en vinderhånd.`)});
+  // the most painful loss: a big pot lost with a decent hand
+  L.filter(i=>!won[i]).forEach(i=>{const sc=r0.evals[i].score;if(sc[0]<2)return;const st=stat(s,s.seats[i].uid),amt=tot[i];
+    if(!st.ouch||amt>st.ouch.amt)st.ouch={amt,hand:handName(sc)}});
   pay72(s,winners.map(w=>w.seat));
 }
 
@@ -312,6 +321,10 @@ function act(s,seat,kind,to){
   const h=s.hand,p=s.seats[seat];
   if(!h||!BETTING.includes(h.phase)||h.toAct!==seat||!canAct(p))return false;
   const toCall=h.curBet-p.bet;
+  // thinking time: anything past the normal clock comes out of the player's time bank
+  const think=Date.now()-h.turnAt;h.think[seat]=think;
+  {const st=stat(s,p.uid);if(think>10000)st.tank+=think-10000;
+   if(think>TURN_MS){s.bank=s.bank||{};s.bank[p.uid]=Math.max(0,bankOf(s,p.uid)-(think-TURN_MS))}}
   const potNow=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
   if(kind==='fold'){p.folded=true;log(s,`${p.nick} folder.`)}
   else if(kind==='check'){if(toCall>0)return false;log(s,`${p.nick} checker.`)}
@@ -323,7 +336,7 @@ function act(s,seat,kind,to){
     const size=to-h.curBet;
     if(potNow+toCall>0)h.fracs[seat]=Math.round(size/(potNow+toCall)*100)/100;
     if(size>=h.minRaise){h.minRaise=size;s.seats.forEach((q,i)=>{if(i!==seat&&canAct(q))q.acted=false})}
-    h.curBet=to;put(p,to-p.bet);
+    h.curBet=to;put(p,to-p.bet);stat(s,p.uid).raises++;
     log(s,`${p.nick} ${p.allin?'går all-in til':(toCall>0?'hæver til':'byder')} ${fmt(to)}.`);
   } else return false;
   p.acted=true;
@@ -333,4 +346,4 @@ function act(s,seat,kind,to){
   return true;
 }
 
-module.exports={eval7,equity,show,buyIn,cashOut,RIT_MS,N,NEXT_HAND_MS,TURN_MS,CHARS,BETTING,fmt,emptyState,norm,log,eligible,live,canAct,startHand,advance,act,award,vote,resolveRit};
+module.exports={bankOf,eval7,equity,show,buyIn,cashOut,RIT_MS,N,NEXT_HAND_MS,TURN_MS,CHARS,BETTING,fmt,emptyState,norm,log,eligible,live,canAct,startHand,advance,act,award,vote,resolveRit};

@@ -319,7 +319,7 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 @media (max-width:640px){.rules{grid-template-columns:1fr}}
 .landing{display:none;flex-direction:column;align-items:center;gap:clamp(28px,5vw,48px);padding-block:clamp(16px,5vh,56px) 24px;text-align:center}
 .on-landing .landing{display:flex}
-.on-landing .stage,.on-landing #dock,.on-landing #hud,.on-landing #lbBox,.on-landing #logBox,.on-landing #leadPanel,.on-landing .top,.on-landing .foot{display:none!important}
+.on-landing .stage,.on-landing #dock,.on-landing #hud,.on-landing #lbBox,.on-landing #chatBox,.on-landing #reacts,.on-landing #logBox,.on-landing #leadPanel,.on-landing .top,.on-landing .foot{display:none!important}
 .hero{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:720px}
 .eyebrow{margin:0;max-width:100%;font-family:var(--f-label);font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:var(--aurora)}
 .hero-title{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(64px,15vw,168px);line-height:.82;letter-spacing:.01em;text-transform:uppercase;
@@ -563,6 +563,25 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 @keyframes speed{to{background-position:0 46px}}
 @media (prefers-reduced-motion:reduce){.ai *{animation-duration:.01s!important;animation-iteration-count:1!important}.tank,.tank *{animation:none!important}}
 .lite .ai .flake,.lite .ai .drop,.lite .ai .beams{display:none}
+/* v5: pre-actions, time bank, chat, titles, tv */
+.preacts{display:flex;gap:6px;flex-wrap:wrap}
+.preacts .btn{opacity:.75}
+.preacts .btn.on{opacity:1;box-shadow:0 0 0 2px var(--aurora) inset;background:rgba(92,242,168,.22)}
+.keys{font-size:12px;color:var(--muted)}.keys kbd{font-family:var(--f-label);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin:0 2px;background:rgba(5,10,21,.5)}
+.timer.bank{height:5px}.timer.bank i{background:#ffd23f}
+.timer span{position:absolute;right:0;bottom:6px;font-size:11px;font-weight:800;color:#ffd23f;text-shadow:0 1px 2px #000}
+.tag.slow{background:#9b8c4e;color:var(--night)}
+.tag.out{background:rgba(227,244,247,.25)}
+.lb .badge.t{background:rgba(143,221,224,.22);color:var(--ice);border:1px solid rgba(143,221,224,.5);text-transform:none;letter-spacing:.02em;font-size:11px}
+.lb .titles-legend{font-size:12px;color:var(--muted);margin-top:6px}
+.chat .chead{display:flex;justify-content:space-between;align-items:center}
+.chat .chead h2{font-size:18px}
+.chat .clist{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.chat .cm b{margin-right:6px}.chat .cm small{color:var(--muted);margin-left:6px;font-size:11px}
+.chat .chatin{display:flex;gap:6px}.chat .chatin input{flex:1;min-width:0}
+.chat .empty{color:var(--muted);font-size:13px}
+.unread{background:var(--aurora);color:var(--night);border-radius:999px;padding:0 6px;margin-left:4px;font-size:11px;font-weight:800}
+.tv #dock,.tv #hud,.tv #reacts,.tv #chatBox,.tv #leadPanel,.tv #logBox,.tv .foot{display:none!important}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -643,6 +662,7 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
   <section class="hud" id="hud" hidden aria-live="polite"></section>
   <section class="dock" id="dock" aria-live="polite"></section>
   <div class="reacts" id="reacts" hidden aria-label="Taunts og ting at kaste"></div>
+  <section class="dock chat" id="chatBox" hidden aria-label="Chat"></section>
   <section class="dock lb" id="lbBox" hidden></section>
 
   <section class="dock lead" id="leadPanel" hidden></section>
@@ -957,7 +977,7 @@ function emptyState(){return{v:0,seats:Array(N).fill(null),sb:10,bb:20,stack:100
 function norm(s){if(!Array.isArray(s.seats))s.seats=[];while(s.seats.length<N)s.seats.push(null);s.log=s.log||[];s.requests=s.requests||{};return s}
 const nick=(s,i)=>s.seats[i]?.nick||'Spiller';
 function log(s,m){s.log.push(m);if(s.log.length>40)s.log=s.log.slice(-40)}
-const eligible=p=>p&&!p.leaving&&p.chips>0;
+const eligible=p=>p&&!p.leaving&&!p.sitout&&p.chips>0;
 const live=p=>p&&p.inHand&&!p.folded;
 const canAct=p=>live(p)&&!p.allin;
 function nextIdx(s,from,pred){for(let k=1;k<=N;k++){const i=((from+k)%N+N)%N;if(pred(s.seats[i],i))return i}return -1}
@@ -1246,9 +1266,21 @@ function confetti(power=1,colors=['#d4122f','#f6f9fb','#5cf2a8','#8fdde0','#ffd2
     if(f<200)confetti.raf=requestAnimationFrame(step);else{x.clearRect(0,0,cv.width,cv.height);cv.hidden=true}};
   step();
 }
+const WIN_SFX=[
+ ()=>{SFX.slide(190,80,.9,.22,'sawtooth');SFX.noise(.7,300,.6,.3,.05)}, // Nanoq: isbjørnebrøl
+ ()=>{[0,.22,.44].forEach(d=>{SFX.slide(620,330,.12,.2,'square',d);SFX.noise(.08,900,1.2,.3,d)})}, // Qimmeq: vov vov vov
+ ()=>{SFX.slide(180,460,1.3,.12,'sine');SFX.slide(460,240,1.5,.1,'sine',1.25);SFX.slide(300,520,.9,.06,'triangle',2.4)}, // Arfeq: hvalsang
+ ()=>{SFX.slide(380,950,.32,.12,'square');SFX.slide(950,520,.45,.12,'square',.32);SFX.noise(.25,1400,.5,.9,.9)}, // Puisi: yeehaw + bang
+ ()=>{SFX.slide(300,640,1,.08,'triangle');SFX.slide(640,220,1.2,.08,'triangle',1);SFX.slide(55,50,2,.2,'sawtooth')}, // Tupilak: spøgelses-theremin
+ ()=>{SFX.tone(110,1.2,.2,0,'sawtooth');SFX.tone(165,1.2,.07,0,'sawtooth');SFX.noise(.5,180,.5,.9,1.2)}, // Ib: tågehorn + isknæk
+ ()=>{for(let k=0;k<8;k++){SFX.tone(62,.16,.32,k*.25);SFX.noise(.04,8000,1,.15,k*.25+.125)}[523,659,784,1047,784,659].forEach((f,k)=>SFX.tone(f,.18,.06,k*.25,'square'))}, // Tuttu: rensdyr-disco
+ ()=>{[0,.35].forEach(d=>{for(let k=0;k<5;k++)SFX.tone(k%2?520:580,.06,.12,d+k*.06,'sawtooth')});SFX.boom(.8)} // Umimmak: mæææh + stamp
+];
 function celebrate(s,h){
   const ms=mySeat();const won=h.result.winners.some(w=>w.seat===ms);
-  if(won){SFX.win();confetti(.6)}else{SFX.flip();SFX.chip(.6)}
+  const top=[...h.result.winners].sort((a,b)=>b.amount-a.amount)[0];
+  if(won)confetti(.6);
+  if(top&&WIN_SFX[top.seat]){SFX.chip(.6);try{WIN_SFX[top.seat]()}catch{}}else if(won)SFX.win();else{SFX.flip();SFX.chip(.6)}
   const jp=h.result.jackpots||[];if(!jp.length)return;
   const j=jp.find(x=>x.type==='royal')||jp[0];
   const el=$('jackpot');
@@ -1320,7 +1352,7 @@ function render(){
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
+  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}<button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   ensureCenter();
@@ -1427,7 +1459,9 @@ function render(){
     else if(p.allin&&p.inHand&&!p.folded&&!reveal)tag='<span class="tag">All-in</span>';
     else if(isWin)tag=`<span class="tag ok">+${fmt(h.result.winners.find(w=>w.seat===i).amount)}</span>`;
     else if(reveal&&h.result?.names?.[i])tag=`<span class="tag ok" style="background:var(--glacier)">${esc(h.result.names[i])}</span>`;
+    else if(p.sitout&&!(p.inHand&&!p.folded))tag='<span class="tag out">Sidder ude</span>';
     else if(p.chips===0&&!p.inHand)tag='<span class="tag">Flad</span>';
+    if(reveal&&(h.result?.slow||[]).includes(i))tag+='<span class="tag slow">Dårlig stil 🐟</span>';
     setHTML(e.tag,tag+(s.dealer===i&&h?'<span class="dealer">D</span>':''));
     setHTML(e.av,avatar(i));
     // chips are shown as they were before the pot is paid, until the cards are revealed
@@ -1435,7 +1469,7 @@ function render(){
     if(h?.phase==='showdown'&&!reveal){const w=(h.result?.winners||[]).find(x=>x.seat===i);if(w)chipsNow-=w.amount;(h.result?.jackpots||[]).forEach(j=>{if(j.seat===i)chipsNow-=j.amount;else if(j.type==='72')chipsNow+=s.jp72})}
     chipsNow=Math.max(0,chipsNow);CS[i]=chipsNow;
     setHTML(e.pt,`<div class="nm">${esc(p.nick)}${isMe?' (dig)':''}</div><div class="cn">${esc(CHARS[i].name)}</div>${s.leader&&p.uid===s.leader?'<span class="lead-badge">Leder</span>':''}<div class="ch">${fmt(chipsNow)}</div>`);
-    setHTML(e.timer,turn?`<div class="timer"><i data-turnat="${h.turnAt}"></i></div>`:'');
+    setHTML(e.timer,turn?`<div class="timer"><i data-turnat="${h.turnAt}" data-bank="${bankLeft(s,p.uid)}"></i><span></span></div>`:'');
     let bubble='';const say=h?.say;
     const rx=REACTS_SHOWN[i];
     if(rx&&Date.now()-rx.t<4000)bubble=`<div class="bubble react ${rx.taunt?'taunt':''} ${pos.y<50?'below':''}" data-at="${rx.at}">${esc(rx.text)}</div>`;
@@ -1460,6 +1494,7 @@ function render(){
   // admin
   $('adminSlot').innerHTML='';
   renderLead();
+  renderChat();
   tickTimers();
   renderDock();
   scheduleNext();
@@ -1496,18 +1531,19 @@ function renderDock(){
   if(betting&&h.toAct===ms){
     const toCall=Math.min(h.curBet-p.bet,p.chips);
     const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips;
-    const key=`turn${h.id}${h.phase}${h.curBet}${p.bet}${busy}`;if(key===lastBarKey)return;lastBarKey=key;
+    const key=`turn${h.id}${h.phase}${h.curBet}${p.bet}${busy}${bankLeft(s,p.uid)}`;if(key===lastBarKey)return;lastBarKey=key;
     const pot=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
     const potTo=Math.min(maxTo,Math.max(minTo,h.curBet+toCall+pot));
     const halfTo=Math.min(maxTo,Math.max(minTo,h.curBet+Math.floor((pot+toCall)/2)));
     const toFor=f=>Math.min(maxTo,Math.max(minTo,h.curBet+Math.round(f*(pot+toCall))));
     const canRaise=maxTo>h.curBet;
-    dock.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Din tur</h2><span class="status">${toCall>0?`${fmt(toCall)} at calle`:'Ingen bud at matche'}</span></div>
+    dock.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Din tur</h2><span class="status">${toCall>0?`${fmt(toCall)} at calle`:'Ingen bud at matche'} · ⏳ Tidsbank ${Math.round(bankLeft(s,p.uid)/1000)} s</span></div>
       <div class="actions">
         <button class="btn fold" data-act="fold" ${busy?'disabled':''}>Fold</button>
         <button class="btn check" data-act="check" ${busy||toCall>0?'disabled':''}>Check</button>
         <button class="btn call" data-act="call" ${busy||toCall<=0?'disabled':''}>${toCall>=p.chips&&toCall>0?'All-in':'Call'}${toCall>0?` ${fmt(toCall)}`:''}</button>
         <button class="btn raise" data-act="raise" ${busy||!canRaise?'disabled':''}><span id="raiseLbl">${h.curBet>0?'Raise til':'Bet'} ${fmt(minTo)}</span></button>
+        ${KEYS_OK?'<div class="keys" style="grid-column:1/-1">Genveje: <kbd>F</kbd> fold · <kbd>C</kbd> check/call · <kbd>R</kbd> raise</div>':''}
         ${canRaise&&maxTo>minTo?`<div class="raisebox"><div class="row"><input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${minTo}" aria-label="Beløb"><input type="number" id="raiseNum" min="${minTo}" max="${maxTo}" value="${minTo}" style="width:110px" aria-label="Beløb i chips"></div>
           <div class="fracline" id="fracLine">${fracText(minTo)}</div>
           <div class="presets"><button class="btn small ghost" data-preset="${minTo}">Min</button>${[['⅓',1/3],['½',.5],['⅔',2/3],['Pulje',1],['2× pulje',2]].map(([l,f])=>`<button class="btn small ghost" data-preset="${toFor(f)}">${l}</button>`).join('')}<button class="btn small ghost" data-preset="${maxTo}">All-in</button></div></div>`:''}
@@ -1526,6 +1562,10 @@ function renderDock(){
     msg='Venter på at alle stemmer om run it twice…';
   } else if(p.inHand&&!p.folded){
     msg=`Venter på ${esc(nick(s,h.toAct))}…`;
+    if(betting&&!p.allin&&!p.sitout&&p.chips>0){const pa=PRE&&PRE.hid===h.id?PRE.kind:'',need=h.curBet>p.bet;
+      btns+=`<div class="preacts" role="group" aria-label="Vælg på forhånd"><button class="btn small ${pa==='cf'?'on':''}" data-pre="cf" aria-pressed="${pa==='cf'}">${need?'Fold':'Check/fold'}</button>`+
+        `<button class="btn small ${pa==='any'?'on':''}" data-pre="any" aria-pressed="${pa==='any'}">Call hvad som helst</button>`+
+        (need?'':`<button class="btn small ${pa==='check'?'on':''}" data-pre="check" aria-pressed="${pa==='check'}">Check</button>`)+`</div>`}
   } else msg=p.inHand?'Du har foldet. Næste hånd kommer.':'Du er med fra næste hånd.';
   if(p.chips===0&&!(p.inHand&&betting)){
     if(isOwner)btns+=`<button class="btn small" id="rebuyBtn" ${busy?'disabled':''}>Køb ind igen (${fmt(s.stack)})</button>`;
@@ -1539,12 +1579,19 @@ function renderDock(){
       if(!vol.includes(hole[0]))btns+=`<button class="btn small" data-show="a" ${busy?'disabled':''}>${cardTxt(hole[0])}</button>`;
       if(!vol.includes(hole[1]))btns+=`<button class="btn small" data-show="b" ${busy?'disabled':''}>${cardTxt(hole[1])}</button>`;
       if(!vol.length)btns+=`<button class="btn small go" data-show="both" ${busy?'disabled':''}>Begge</button>`}}
+  if(p.sitout)msg='Du sidder ude, så du bliver ikke blindet. Tryk “Sid med igen”, når du er tilbage.';
+  btns+=`<button class="btn small ${p.sitout?'go':'ghost'}" id="sitoutBtn" ${busy?'disabled':''}>${p.sitout?'Sid med igen':'Sid ude'}</button>`;
   btns+=`<button class="btn small ghost" id="leaveBtn" ${busy?'disabled':''}>Rejs dig</button>`;
   const key=`wait${msg}${btns}`;if(key===lastBarKey)return;lastBarKey=key;
   dock.innerHTML=`<div class="row" style="justify-content:space-between"><span class="status">${msg}</span><div class="row">${btns}</div></div>`;
 }
 
-function tickTimers(){document.querySelectorAll('.timer i').forEach(el=>{const left=Math.max(0,1-(clock()-+el.dataset.turnat)/TURN_SKIP);el.style.transform=`scaleX(${left})`});
+function bankLeft(s,uid){const b=s?.bank?.[uid];return b==null?(s?.bankSec??60)*1000:b}
+function tickTimers(){document.querySelectorAll('.timer i').forEach(el=>{const used=clock()-+el.dataset.turnat,bank=+el.dataset.bank||0;
+    const inBank=used>TURN_SKIP&&bank>0,box=el.parentElement,lab=box.querySelector('span');
+    const left=inBank?Math.max(0,1-(used-TURN_SKIP)/bank):Math.max(0,1-used/TURN_SKIP);
+    box.classList.toggle('bank',inBank);el.style.transform=`scaleX(${left})`;
+    if(lab)lab.textContent=inBank?`⏳ Tidsbank ${Math.max(0,Math.ceil((bank-(used-TURN_SKIP))/1000))}s`:''});
   document.querySelectorAll('[data-next]').forEach(el=>{el.textContent=Math.max(0,Math.ceil((+el.dataset.next-clock())/1000))});
   if(S)updateTanks()}
 
@@ -1566,11 +1613,37 @@ function renderBoardLb(s,CS,reveal){
     const now=l.cash+(p?(CS[i]??p.chips)+inPot:0);const st=s.stats?.[uid]||{};
     return{uid,nick:l.nick,seat:i>=0?i:l.seat,here:!!p,in:l.in,now,res:now-l.in,won:st.won||0,big:st.biggest||0}}).sort((a,b)=>b.res-a.res||b.won-a.won);
   const last=rows.length>1&&rows[rows.length-1].res<0?rows[rows.length-1].uid:null;
+  const T=titlesFor(s,ids);
   setHTML(el,`<div class="row" style="justify-content:space-between"><h2>🏆 Leaderboard</h2><span class="lead-sub">Hvem har vundet og tabt i aften</span></div>
     <table><thead><tr><th>Spiller</th><th>Sat ind</th><th>Har nu</th><th>Resultat</th><th class="hide-s">Vundne</th><th class="hide-s">Største pulje</th></tr></thead><tbody>
-    ${rows.map((r,k)=>`<tr class="${k===0?'first':''}"><td class="who"><span class="rk">${k+1}</span>${r.seat>=0?avatar(r.seat):''}<span>${esc(r.nick)}${r.uid===me?' (dig)':''}${k===0&&r.res>0?'<span class="badge g">Høvding</span>':''}${r.uid===last?'<span class="badge f">Dagens torsk 🐟</span>':''}<small>${r.seat>=0?esc(CHARS[r.seat].name):''}${r.here?'':' · har forladt bordet'}</small></span></td>
+    ${rows.map((r,k)=>`<tr class="${k===0?'first':''}"><td class="who"><span class="rk">${k+1}</span>${r.seat>=0?avatar(r.seat):''}<span>${esc(r.nick)}${r.uid===me?' (dig)':''}${k===0&&r.res>0?'<span class="badge g">Høvding</span>':''}${r.uid===last?'<span class="badge f">Dagens torsk 🐟</span>':''}${(T[r.uid]||[]).map(([n,why])=>`<span class="badge t" title="${esc(why)}">${n}</span>`).join('')}<small>${r.seat>=0?esc(CHARS[r.seat].name):''}${r.here?'':' · har forladt bordet'}</small></span></td>
       <td>${fmt(r.in)}</td><td>${fmt(r.now)}</td><td class="${r.res>0?'pos':r.res<0?'neg':''}">${r.res>0?'+':''}${fmt(r.res)}</td><td class="hide-s">${r.won}</td><td class="hide-s">${fmt(r.big)}</td></tr>`).join('')}
-    </tbody></table>`)}
+    </tbody></table>${Object.keys(T).length?'<div class="titles-legend">Hold musen over en titel for at se, hvorfor man har fået den.</div>':''}`)}
+function titlesFor(s,ids){const st=s.stats||{},T={},add=(uid,n,why)=>(T[uid]=T[uid]||[]).push([n,why]);
+  const best=(f,min)=>{let b=null,v=min;ids.forEach(u=>{const x=f(st[u]||{});if(x!=null&&x>v){v=x;b=u}});return b?[b,v]:null};
+  let r;
+  if(r=best(x=>x.b72||0,0))add(r[0],'🐟 Torskekongen',`Flest gevinster med 7-2: ${r[1]}`);
+  {let b=null,v=1;ids.forEach(u=>{const x=st[u]||{};if((x.hands||0)>=10){const q=(x.raises||0)/x.hands;if(q<v){v=q;b=u}}});
+    if(b)add(b,'🧊 Isbjerget',`Raiser sjældnest ved bordet (${Math.round(v*100)}% af hænderne). Kold som is.`)}
+  if(r=best(x=>x.tank||0,4999))add(r[0],'👻 Qivittoq',`Længst tid i tanken: ${Math.round(r[1]/1000)} sek.`);
+  if(r=best(x=>x.ouch?.amt||0,0))add(r[0],'😱 Malkemasking-offer',`Tabte ${fmt(r[1])} med ${(st[r[0]].ouch.hand)||'en kæmpe hånd'}`);
+  ids.forEach(u=>{const n=st[u]?.slow||0;if(n>0)add(u,'Dårlig stil 🐟',`Har slow-rollet ${n} gang${n>1?'e':''}`)});
+  return T}
+
+/* ---------- chat ---------- */
+const CHAT=[];let chatHidden=false,chatUnread=0,chatKey='';
+try{chatHidden=localStorage.getItem('nanoq-chat-hidden')==='1'}catch{}
+function renderChat(){
+  const el=$('chatBox');if(!joined||!S){el.hidden=true;chatKey='';return}el.hidden=false;
+  const seated=mySeat()>=0,key=`${chatHidden}${seated}`;
+  if(key!==chatKey){chatKey=key;
+    el.innerHTML=`<div class="chead"><h2>💬 Chat</h2><button class="btn small ghost" id="chatToggle" aria-expanded="${!chatHidden}">${chatHidden?'Vis chat':'Skjul'}<span id="chatUnread"></span></button></div>`+
+      (chatHidden?'':`<div class="clist" id="chatList" aria-live="polite"></div>${seated?'<div class="chatin"><input type="text" id="chatIn" maxlength="140" placeholder="Skriv en besked…" aria-label="Chatbesked" autocomplete="off"><button class="btn small go" id="chatSend">Send</button></div>':'<div class="empty">Sæt dig ved bordet for at skrive med.</div>'}`)}
+  const u=$('chatUnread');if(u)u.innerHTML=chatHidden&&chatUnread?`<span class="unread">${chatUnread}</span>`:'';
+  const L=$('chatList');if(!L)return;
+  const html=CHAT.length?CHAT.map(m=>`<div class="cm"><b style="color:${SCENES[m.seat]?.glow||'var(--aurora)'}">${esc(m.nick)}</b>${esc(m.text)}<small>${new Date(m.at-skew).toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join(''):'<div class="empty">Ingen beskeder endnu. Sig hej til bordet!</div>';
+  if(L.dataset.n!==String(CHAT.length)){L.innerHTML=html;L.dataset.n=CHAT.length;L.scrollTop=L.scrollHeight}}
+function sendChat(){const i=$('chatIn');const t=(i?.value||'').trim();if(!t)return;sock.emit('chat',{text:t});i.value='';i.focus()}
 setInterval(tickTimers,1000);
 
 function scheduleNext(){/* the server deals the next hand */}
@@ -1675,12 +1748,43 @@ document.addEventListener('click',e=>{
   if(t.id==='dealBtn'){send('deal');return}
   if(t.id==='rebuyBtn'){send('rebuy');return}
   if(t.id==='leaveBtn'){send('leave');return}
+  if(t.id==='sitoutBtn'){const p=S?.seats[mySeat()];if(p)send('sitout',{on:!p.sitout});return}
+  if(t.dataset.pre){const h=S?.hand;if(!h)return;PRE=PRE&&PRE.hid===h.id&&PRE.kind===t.dataset.pre?null:{hid:h.id,kind:t.dataset.pre};lastBarKey='';renderDock();return}
+  if(t.id==='chatToggle'){chatHidden=!chatHidden;chatUnread=0;try{localStorage.setItem('nanoq-chat-hidden',chatHidden?'1':'0')}catch{}chatKey='';renderChat();return}
+  if(t.id==='chatSend'){sendChat();return}
+  if(t.id==='tvBtn'){setTV(!TV);return}
   if(t.id==='resetBtn'){
     if(!armReset){armReset=true;leadKey='';render();setTimeout(()=>{armReset=false;leadKey='';render()},4000);return}
     armReset=false;send('reset');return;
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click();
+  if(e.key==='Enter'&&e.target.id==='chatIn'){e.preventDefault();sendChat();return}
+  if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
+  const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable)&&tg.type!=='range')return;
+  const k=e.key.toLowerCase();if(!['f','c','r'].includes(k))return;
+  const h=S?.hand,ms=mySeat();if(!h||ms<0||h.toAct!==ms||!['preflop','flop','turn','river'].includes(h.phase))return;
+  const q=a=>{const b=document.querySelector(`#dock [data-act="${a}"]`);return b&&!b.disabled?b:null};
+  const b=k==='f'?q('fold'):k==='c'?(q('check')||q('call')):q('raise');
+  if(b){e.preventDefault();b.click()}});
+const KEYS_OK=matchMedia('(pointer:fine)').matches;
+/* ---------- pre-selected actions (when it is not your turn) ---------- */
+let PRE=null;
+function runPre(prev){
+  const h=S?.hand,ms=mySeat(),p=ms>=0?S.seats[ms]:null;
+  if(!PRE)return;
+  if(!h||h.id!==PRE.hid||!p||!p.inHand||p.folded||p.allin){PRE=null;return}
+  const betting=['preflop','flop','turn','river'].includes(h.phase);if(!betting){PRE=null;return}
+  const toCall=h.curBet-p.bet;
+  // someone bet: a plain "Check" no longer fits, so it is dropped
+  if(PRE.kind==='check'&&toCall>0){PRE=null;lastBarKey='';renderDock();toast('Nogen bettede, så dit forvalg “Check” er fjernet.');return}
+  if(h.toAct!==ms)return;
+  const kind=PRE.kind==='cf'?(toCall>0?'fold':'check'):PRE.kind==='any'?(toCall>0?'call':'check'):'check';
+  PRE=null;setTimeout(()=>{if(S?.hand?.id===h.id&&S.hand.toAct===ms)send('act',{kind,to:0,handId:h.id})},250)}
+/* ---------- TV mode for spectators ---------- */
+let TV=new URLSearchParams(location.search).get('tv')==='1';
+function setTV(on){TV=on;document.documentElement.classList.toggle('tv',on);if(on)document.documentElement.requestFullscreen?.().catch(()=>{});else if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});if(S)render()}
+document.documentElement.classList.toggle('tv',TV);
 function fracText(v){const h=S?.hand,p=S?.seats[mySeat()];if(!h||!p)return'';const pot=S.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0),toCall=Math.max(0,h.curBet-p.bet);
   const f=(v-h.curBet)/Math.max(1,pot+toCall);return `${h.curBet>0?'Hævningen':'Buddet'} er <b>${fracLabel(f)}</b> <span style="opacity:.7">(${Math.round(f*100)}% af ${fmt(pot+toCall)})</span>`}
 function setRaise(v){const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Raise til':'Bet'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
@@ -1702,10 +1806,13 @@ function joinRoom(){
 sock=io({transports:['websocket','polling']});
 sock.on('connect',joinRoom);
 sock.on('disconnect',()=>{$('conn').hidden=false});
-sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);render();turnAlert();
+sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();turnAlert();
   // somebody just shoved: their character makes an entrance
   if(prev?.hand&&S.hand&&prev.hand.id===S.hand.id)S.seats.forEach((p,i)=>{if(p&&p.inHand&&p.allin&&!prev.seats[i]?.allin&&prev.seats[i]?.uid===p.uid)queueAllin(i)})});
 sock.on('connect',()=>{$('conn').hidden=true});
+sock.on('chatlog',l=>{CHAT.length=0;CHAT.push(...(l||[]));renderChat()});
+sock.on('chat',m=>{CHAT.push(m);if(CHAT.length>40)CHAT.shift();if(chatHidden&&m.seat!==mySeat())chatUnread++;
+  REACTS_SHOWN[m.seat]={text:m.text,at:m.at,t:Date.now(),taunt:false};if(m.seat!==mySeat())SFX.tone(900,.06,.05);renderChat();render();setTimeout(render,4100)});
 sock.on('react',r=>{if(r.throw){throwAnim(r);return}
   REACTS_SHOWN[r.seat]={text:r.text,at:r.at,t:Date.now(),taunt:REACTS.indexOf(r.text)>=10};SFX.tone(1200,.08,.06);SFX.tone(1600,.1,.05,.06);render();setTimeout(render,4100)});
 addEventListener('hashchange',joinRoom);
