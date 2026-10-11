@@ -737,6 +737,51 @@ details.log ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:col
 body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:54;box-shadow:inset 0 0 0 4px rgba(92,242,168,.55),inset 0 0 60px rgba(92,242,168,.18);animation:turnGlow 1.4s ease-in-out infinite alternate}
 @keyframes turnGlow{from{opacity:.55}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){body.myturn::after{animation:none}.ab-main .btn.fold.armed{animation:none}}
+/* v9: PokerStars-style action bar */
+@media (min-width:701px){.actbar{width:min(470px,calc(100vw - 32px))}}
+.ps-ring{border-radius:14px;padding:3px}
+.ps{background:linear-gradient(#1b1f26,#101318);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(255,255,255,.06)}
+.ps-top{display:flex;align-items:center;gap:8px;font-size:13px;color:#c9d1db}
+.ps-top>b{font-family:var(--f-display);font-size:16px;text-transform:uppercase;letter-spacing:.04em;color:#fff}
+.ps-pot{margin-left:auto;font-weight:700}
+.ps-wait{color:#aab3bd;font-weight:600}
+.ps-size{display:flex;flex-direction:column;gap:6px;background:rgba(0,0,0,.35);border-radius:8px;padding:6px}
+.ps-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.ps-pre{position:relative;background:linear-gradient(#3a414c,#272c34);color:#e8edf2;border:1px solid #4a525e;border-radius:5px;font-weight:700;font-size:12px;padding:7px 2px;cursor:pointer}
+.ps-pre:hover{filter:brightness(1.2)}
+.ps-pre .kb{top:1px;right:2px;font-size:8px;padding:0 2px}
+.ps-slide{display:grid;grid-template-columns:30px 1fr 30px 86px;gap:6px;align-items:center}
+.ps-step{height:30px;border-radius:5px;border:1px solid #4a525e;background:#2a3038;color:#fff;font-size:18px;font-weight:800;cursor:pointer;padding:0}
+.ps-slide input[type=range]{width:100%;accent-color:#d8202a;height:26px}
+.ps-slide input[type=number]{width:100%;background:#fff;color:#111;border:0;border-radius:5px;padding:6px;font-weight:800;font-size:16px;text-align:right}
+.ps-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ps-b{position:relative;min-height:62px;border-radius:7px;border:1px solid #6e1013;background:linear-gradient(#b3232a,#7a1116);color:#fff;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 3px 8px rgba(0,0,0,.5);padding:4px}
+.ps-b span{font-size:20px;font-weight:800}
+.ps-b small{font-size:13px;font-weight:700;opacity:.9}
+.ps-b:hover:not(:disabled){filter:brightness(1.15)}
+.ps-b:active:not(:disabled){transform:translateY(1px);filter:brightness(.95)}
+.ps-b:disabled{opacity:.45;cursor:default}
+.ps-b:focus-visible,.ps-pre:focus-visible,.ps-chk:focus-visible{outline:3px solid #ffd23f;outline-offset:2px}
+.ps-b.fold.armed{background:linear-gradient(#ffcc33,#d39a00);color:#1a1200;border-color:#a87800;animation:armPulse .6s ease-in-out infinite alternate}
+.ps-b.fold.armed small{text-transform:none;font-size:11px}
+.ps-b .kb{top:3px;right:4px;color:#fff;font-family:ui-monospace,monospace;font-size:9px;letter-spacing:0;text-transform:none;font-weight:600;opacity:.55;line-height:1.3}
+.ps-pre .kb{font-family:ui-monospace,monospace;font-size:8px;opacity:.5}
+.ps-pres{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ps-chk{display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 10px;border-radius:7px;border:1px solid #3b424d;background:linear-gradient(#2b3139,#1c2026);color:#e8edf2;font-weight:700;font-size:14px;cursor:pointer;text-align:left}
+.ps-chk i{flex:none;width:18px;height:18px;border-radius:4px;border:2px solid #8a94a0;background:#0d1014;display:grid;place-items:center}
+.ps-chk.on{border-color:#d8202a;background:linear-gradient(#3a1d20,#24141a)}
+.ps-chk.on i{border-color:#d8202a;background:#d8202a}
+.ps-chk.on i::after{content:'✓';color:#fff;font-size:13px;font-weight:900;line-height:1;font-style:normal}
+@media (max-width:700px){
+  .ps-ring{border-radius:14px 14px 0 0;padding:3px 0 0}
+  .ps{border-radius:12px 12px 0 0;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .ps .ps-size{display:none}.ps.sz-open .ps-size{display:flex}
+  .ps-b{min-height:58px}.ps-b span{font-size:18px}
+  .ps-slide{grid-template-columns:40px 1fr 40px 80px}.ps-step{height:40px}
+  .ps-pre{padding:10px 2px}
+  .has-actbar .app{padding-bottom:180px}.has-actbar .caster{bottom:170px}
+  .ps-chk{font-size:13px;padding:6px 8px}
+}
 @media (max-width:700px){
   .ab-main .btn{min-height:64px;font-size:16px}
   .ab-main .btn.go{font-size:19px}
@@ -1699,7 +1744,7 @@ function renderDock(){
   }
   if(betting&&h.toAct===ms){
     const key=`turn${h.id}${busy}`;if(key===lastBarKey)return;lastBarKey=key;
-    dock.innerHTML=`<div class="row corner-note" style="justify-content:space-between"><h2>Din tur</h2><span class="status"><span class="d">Dine knapper ligger i hjørnet nederst til højre ↘</span><span class="m">Dine knapper ligger nederst ↓</span>${KEYS_OK?' · Genveje: <kbd>Mellemrum</kbd> check/call · <kbd>F</kbd> fold · <kbd>R</kbd> raise · <kbd>1</kbd>–<kbd>3</kbd> hurtig-raise':''}</span></div>`;
+    dock.innerHTML=`<div class="row corner-note" style="justify-content:space-between"><h2>Din tur</h2><span class="status"><span class="d">Dine knapper ligger i hjørnet nederst til højre ↘</span><span class="m">Dine knapper ligger nederst ↓</span>${KEYS_OK?' · Keys: <kbd>Space</kbd> check/call · <kbd>F</kbd> fold · <kbd>R</kbd> raise · <kbd>1</kbd>–<kbd>5</kbd> bet size · <kbd>↑↓</kbd> amount':''}</span></div>`;
     return;
   }
   // waiting states
@@ -1882,7 +1927,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.act){
     const kind=t.dataset.act;let to=0;
     if(kind==='fold'&&t.closest('#actbar')){const h=S?.hand,p=S?.seats[mySeat()];
-      if(h&&p&&h.curBet<=p.bet&&!FOLD_ARM){FOLD_ARM=true;ACT_KEY='';renderActbar();toast('Du kan checke gratis. Tryk Fold igen for at folde alligevel.');clearTimeout(foldT);foldT=setTimeout(()=>{FOLD_ARM=false;ACT_KEY='';renderActbar()},3500);return}
+      if(h&&p&&h.curBet<=p.bet&&!FOLD_ARM){FOLD_ARM=true;ACT_KEY='';renderActbar();toast('You can check for free. Tap Fold again to fold anyway.');clearTimeout(foldT);foldT=setTimeout(()=>{FOLD_ARM=false;ACT_KEY='';renderActbar()},3500);return}
       FOLD_ARM=false;clearTimeout(foldT)}
     try{navigator.vibrate?.(15)}catch{}
     if(kind==='raise'){to=+(t.dataset.to||$('raiseNum')?.value||0)}
@@ -1890,6 +1935,8 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.preset){setRaise(+t.dataset.preset);return}
   if(t.dataset.step){stepRaise(+t.dataset.step);return}
+  if(t.dataset.psraise!=null){if(matchMedia('(max-width:700px)').matches&&!RAISE_OPEN){RAISE_OPEN=true;ACT_KEY='';renderActbar();return}
+    const r=$('raiseRange');const v=Math.max(+r.min,Math.min(+r.max,RAISE_V||+r.min));try{navigator.vibrate?.(15)}catch{}send('act',{kind:'raise',to:v,handId:S?.hand?.id});return}
   if(t.dataset.qraise){try{navigator.vibrate?.(15)}catch{}send('act',{kind:'raise',to:+t.dataset.qraise,handId:S?.hand?.id});return}
   if(t.dataset.rtoggle!=null){RAISE_OPEN=!RAISE_OPEN;ACT_KEY='';renderActbar();if(RAISE_OPEN)$('raiseRange')?.focus();return}
   if(t.dataset.lead){leadAction(t.dataset.lead,+t.dataset.seat);return}
@@ -1916,7 +1963,7 @@ document.addEventListener('click',e=>{
   if(t.id==='rebuyBtn'){send('rebuy');return}
   if(t.id==='leaveBtn'){send('leave');return}
   if(t.id==='sitoutBtn'){const p=S?.seats[mySeat()];if(p)send('sitout',{on:!p.sitout});return}
-  if(t.dataset.pre){const h=S?.hand;if(!h)return;PRE=PRE&&PRE.hid===h.id&&PRE.kind===t.dataset.pre?null:{hid:h.id,kind:t.dataset.pre};lastBarKey='';renderDock();return}
+  if(t.dataset.pre){const h=S?.hand;if(!h)return;PRE=PRE&&PRE.hid===h.id&&PRE.kind===t.dataset.pre?null:{hid:h.id,kind:t.dataset.pre,amt:+(t.dataset.amt||0),bet:h.curBet};ACT_KEY='';renderActbar();lastBarKey='';renderDock();return}
   if(t.id==='chatToggle'){chatHidden=!chatHidden;chatUnread=0;try{localStorage.setItem('nanoq-chat-hidden',chatHidden?'1':'0')}catch{}chatKey='';renderChat();return}
   if(t.id==='chatSend'){sendChat();return}
   if(t.id==='tvBtn'){setTV(!TV);return}
@@ -1929,19 +1976,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeI
   if(e.key==='Enter'&&e.target.id==='chatIn'){e.preventDefault();sendChat();return}
   if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
   const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable)&&tg.type!=='range')return;
-  let k=e.key.toLowerCase();if(k===' '||k==='spacebar')k='c';if(k==='escape'&&RAISE_OPEN){RAISE_OPEN=false;ACT_KEY='';renderActbar();return}
-  if(!['f','c','r','1','2','3','arrowup','arrowdown','enter'].includes(k))return;
-  if(k==='enter'&&!RAISE_OPEN)return;
+  let k=e.key.toLowerCase();if(k===' '||k==='spacebar')k='c';
+  if(!['f','c','r','1','2','3','4','5','arrowup','arrowdown','enter'].includes(k))return;
   const h=S?.hand,ms=mySeat();if(!h||ms<0||h.toAct!==ms||!['preflop','flop','turn','river'].includes(h.phase))return;
   const q=a=>{const b=document.querySelector(`#actbar [data-act="${a}"]`);return b&&!b.disabled?b:null};
-  const tog=document.querySelector('#actbar [data-rtoggle]:not([disabled])');
-  if(k==='arrowup'||k==='arrowdown'){if(RAISE_OPEN){e.preventDefault();stepRaise(k==='arrowup'?1:-1)}return}
-  if('123'.includes(k)){const qb=document.querySelectorAll('#actbar [data-qraise]:not([disabled])')[+k-1];if(qb){e.preventDefault();qb.click()}return}
-  const b=k==='f'?q('fold'):k==='c'?(q('check')||q('call')):k==='enter'?q('raise'):(RAISE_OPEN?q('raise'):(tog||q('raise')));
+  if(k==='arrowup'||k==='arrowdown'){if($('raiseRange')){e.preventDefault();stepRaise(k==='arrowup'?1:-1)}return}
+  if('12345'.includes(k)){const pb=document.querySelectorAll('#actbar [data-preset]')[+k-1];if(pb){e.preventDefault();pb.click()}return}
+  const rb=document.querySelector('#actbar [data-psraise]:not([disabled])')||q('raise');
+  const b=k==='f'?q('fold'):k==='c'?(q('check')||q('call')):rb;
   if(b){e.preventDefault();b.click()}});
 const KEYS_OK=matchMedia('(pointer:fine)').matches;
 /* ---------- the action panel: corner on a computer, bottom bar on a phone ---------- */
-let RAISE_OPEN=false,ACT_KEY='',RAISE_FOR='',FOLD_ARM=false,foldT=null;
+let RAISE_OPEN=false,ACT_KEY='',RAISE_FOR='',FOLD_ARM=false,foldT=null,RAISE_V=0;
 function renderActbar(){
   const el=$('actbar');const s=S,ms=mySeat(),h=s?.hand,p=ms>=0&&s?s.seats[ms]:null;
   const betting=h&&['preflop','flop','turn','river'].includes(h.phase);
@@ -1950,39 +1996,37 @@ function renderActbar(){
   document.body.classList.toggle('has-actbar',mode!=='none');document.body.classList.toggle('myturn',mode==='turn');
   if(mode==='none'){if(!el.hidden){el.hidden=true;el.innerHTML=''}ACT_KEY='';RAISE_OPEN=false;return}
   const hole=dec(p.hole);
-  const mini=hole.length===2?`<span class="ab-cards" aria-label="Dine kort">${hole.map(c=>`<b class="${[1,2].includes(Math.floor(c/13))?'red':''}">${cardTxt(c)}</b>`).join('')}</span>`:'';
+  const mini=hole.length===2?`<span class="ab-cards" aria-label="Your cards">${hole.map(c=>`<b class="${[1,2].includes(Math.floor(c/13))?'red':''}">${cardTxt(c)}</b>`).join('')}</span>`:'';
   if(mode==='pre'){
-    const pa=PRE&&PRE.hid===h.id?PRE.kind:'',need=h.curBet>p.bet;
-    const key=`pre${h.id}${pa}${need}${hole.join()}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
-    el.innerHTML=`<div class="ab-in ab-mini"><div class="ab-head"><span class="lbl">Forvalg · venter på ${esc(nick(s,h.toAct))}</span>${mini}</div>
-      <div class="preacts" role="group" aria-label="Vælg på forhånd"><button class="btn small ${pa==='cf'?'on':''}" data-pre="cf" aria-pressed="${pa==='cf'}">${need?'Fold':'Check/fold'}</button><button class="btn small ${pa==='any'?'on':''}" data-pre="any" aria-pressed="${pa==='any'}">Call alt${need?` ${fmt(Math.min(h.curBet-p.bet,p.chips))}`:''}</button>${need?'':`<button class="btn small ${pa==='check'?'on':''}" data-pre="check" aria-pressed="${pa==='check'}">Check</button>`}</div></div>`;
+    const pa=PRE&&PRE.hid===h.id?PRE.kind:'',need=h.curBet>p.bet,amt=Math.min(h.curBet-p.bet,p.chips);
+    const key=`pre${h.id}${pa}${need}${amt}${hole.join()}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
+    const box=(k,l)=>`<button class="ps-chk ${pa===k?'on':''}" data-pre="${k}" ${k==='callx'?`data-amt="${amt}"`:''} role="checkbox" aria-checked="${pa===k}"><i></i>${l}</button>`;
+    el.innerHTML=`<div class="ps ps-pre"><div class="ps-top"><span class="ps-wait">Waiting for ${esc(nick(s,h.toAct))}…</span>${mini}</div>
+      <div class="ps-pres" role="group" aria-label="Pre-select">${need?box('cf','Fold')+box('callx',`Call ${fmt(amt)}`)+box('any','Call Any'):box('cf','Check/Fold')+box('check','Check')+box('any','Call Any')}</div></div>`;
     return}
   const toCall=Math.min(h.curBet-p.bet,p.chips);
   const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips,canRaise=maxTo>h.curBet,slider=canRaise&&maxTo>minTo;
-  const spot=`${h.id}${h.phase}${h.curBet}`;if(RAISE_FOR!==spot){RAISE_FOR=spot;RAISE_OPEN=false;FOLD_ARM=false}
+  const spot=`${h.id}${h.phase}${h.curBet}`;if(RAISE_FOR!==spot){RAISE_FOR=spot;RAISE_OPEN=false;FOLD_ARM=false;RAISE_V=minTo}
+  RAISE_V=Math.max(minTo,Math.min(maxTo,RAISE_V||minTo));
   const key=`turn${spot}${p.bet}${busy}${RAISE_OPEN}${FOLD_ARM}${bankLeft(s,p.uid)}${h.turnAt}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
   const pot=s.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0);
   const toFor=f=>Math.min(maxTo,Math.max(minTo,h.curBet+Math.round(f*(pot+toCall))));
-  const quick=[['½ pulje',toFor(.5)],['Pulje',toFor(1)],['All-in',maxTo]].filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i);
   const kb=k=>KEYS_OK?`<span class="kb">${k}</span>`:'';
-  const goLbl=toCall>0?(toCall>=p.chips?'All-in':'Call'):'Check';
-  const rl=h.curBet>0?'Raise':'Bet';
-  el.innerHTML=`<div class="ab-ring" data-turnat="${h.turnAt}" data-bank="${bankLeft(s,p.uid)}"><div class="ab-in">
-    <div class="ab-head"><b>Din tur</b>${mini}<span class="ab-st">${toCall>0?`${fmt(toCall)} at calle`:'Gratis at checke'}</span><span class="ab-clock"></span></div>
-    <div class="ab-main" role="group" aria-label="Dine handlinger">
-      <button class="btn fold ${FOLD_ARM?'armed':''}" data-act="fold" ${busy?'disabled':''} aria-keyshortcuts="F" aria-label="${FOLD_ARM?'Bekræft fold':'Fold'}">${kb('F')}<span class="ic">✕</span>${FOLD_ARM?'Sikker?':'Fold'}${FOLD_ARM?'<small>tryk igen</small>':''}</button>
-      <button class="btn go ${toCall>0?'call':'check'}" data-act="${toCall>0?'call':'check'}" ${busy?'disabled':''} aria-keyshortcuts="C Space" aria-label="${goLbl}${toCall>0?' '+toCall:''}">${kb("␣")}<span class="ic">${toCall>0?'●':'✓'}</span>${goLbl}${toCall>0?`<small>${fmt(toCall)}</small>`:''}</button>
-      ${slider?`<button class="btn raise ${RAISE_OPEN?'open':''}" data-rtoggle aria-expanded="${RAISE_OPEN}" ${busy?'disabled':''} aria-keyshortcuts="R">${kb('R')}<span class="ic">▲</span>${RAISE_OPEN?'Luk':rl}<small>${RAISE_OPEN?'skjul':'vælg beløb'}</small></button>`
-        :`<button class="btn raise" data-act="raise" data-to="${maxTo}" ${busy||!canRaise?'disabled':''} aria-keyshortcuts="R">${kb('R')}<span class="ic">▲</span>${canRaise?'All-in':rl}${canRaise?`<small>${fmt(maxTo)}</small>`:''}</button>`}
+  const rl=h.curBet>0?'Raise to':'Bet';
+  const presets=[['Min',minTo],['½ Pot',toFor(.5)],['¾ Pot',toFor(.75)],['Pot',toFor(1)],['Max',maxTo]];
+  const allInR=RAISE_V>=maxTo;
+  el.innerHTML=`<div class="ab-ring ps-ring" data-turnat="${h.turnAt}" data-bank="${bankLeft(s,p.uid)}"><div class="ps ${RAISE_OPEN?'sz-open':''}">
+    <div class="ps-top"><b>Your turn</b>${mini}<span class="ps-pot">Pot ${fmt(pot)}</span><span class="ab-clock"></span></div>
+    ${slider?`<div class="ps-size" role="group" aria-label="Bet size">
+      <div class="ps-presets">${presets.map(([l,v],i)=>`<button class="ps-pre" data-preset="${v}" aria-keyshortcuts="${i+1}">${KEYS_OK?`<span class="kb">${i+1}</span>`:''}${l}</button>`).join('')}</div>
+      <div class="ps-slide"><button class="ps-step" data-step="-1" aria-label="Less">−</button><input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${RAISE_V}" aria-label="Amount"><button class="ps-step" data-step="1" aria-label="More">+</button><input type="number" id="raiseNum" inputmode="numeric" min="${minTo}" max="${maxTo}" value="${RAISE_V}" aria-label="Amount in chips"></div>
+    </div>`:''}
+    <div class="ps-btns" role="group" aria-label="Actions">
+      <button class="ps-b fold ${FOLD_ARM?'armed':''}" data-act="fold" ${busy?'disabled':''} aria-keyshortcuts="F">${kb('F')}${FOLD_ARM?'<span>Fold?</span><small>you can check free</small>':'<span>Fold</span>'}</button>
+      <button class="ps-b" data-act="${toCall>0?'call':'check'}" ${busy?'disabled':''} aria-keyshortcuts="C Space">${kb('Space')}${toCall>0?`<small>${toCall>=p.chips?'All-in':'Call'}</small><span>${fmt(toCall)}</span>`:'<span>Check</span>'}</button>
+      ${slider?`<button class="ps-b raise" data-psraise ${busy?'disabled':''} aria-keyshortcuts="R Enter">${kb('R')}<small id="raiseLbl">${allInR?'All-in':rl}</small><span id="raiseBig">${fmt(RAISE_V)}</span></button>`
+        :`<button class="ps-b raise" data-act="raise" data-to="${maxTo}" ${busy||!canRaise?'disabled':''} aria-keyshortcuts="R">${kb('R')}${canRaise?`<small>All-in</small><span>${fmt(maxTo)}</span>`:`<span>${rl}</span>`}</button>`}
     </div>
-    ${slider?`<div class="ab-quick" role="group" aria-label="Hurtig ${rl.toLowerCase()}">${quick.map(([l,v],i)=>`<button class="btn small ghost" data-qraise="${v}" aria-keyshortcuts="${i+1}" aria-label="${rl} ${l}, ${v}" ${busy?'disabled':''}>${KEYS_OK?`<span class="kb">${i+1}</span>`:''}${l}<b>${fmt(v)}</b></button>`).join('')}</div>`:''}
-    ${slider&&RAISE_OPEN?`<div class="raisebox">
-      <div class="ab-step"><button class="btn ghost" data-step="-1" aria-label="Mindre">−</button><div class="amt"><span id="raiseBig">${fmt(minTo)}</span><small id="fracLine">${fracText(minTo)}</small></div><button class="btn ghost" data-step="1" aria-label="Mere">+</button></div>
-      <input type="range" id="raiseRange" min="${minTo}" max="${maxTo}" step="${s.bb/2}" value="${minTo}" aria-label="Beløb">
-      <input type="hidden" id="raiseNum" value="${minTo}">
-      <div class="presets"><button class="btn small ghost" data-preset="${minTo}">Min</button>${[['⅓',1/3],['⅔',2/3],['2×',2]].map(([l,f])=>`<button class="btn small ghost" data-preset="${toFor(f)}">${l} pulje</button>`).join('')}<button class="btn small ghost" data-preset="${maxTo}">All-in</button></div>
-      <button class="btn raise" data-act="raise" ${busy?'disabled':''} aria-keyshortcuts="Enter"><span id="raiseLbl">${rl==='Raise'?'Raise til':'Bet'} ${fmt(minTo)}</span></button></div>`:''}
-    ${KEYS_OK?`<div class="ab-hint"><kbd>Mellemrum</kbd> ${goLbl.toLowerCase()} · <kbd>F</kbd> fold · <kbd>R</kbd> ${rl.toLowerCase()}${slider?' · <kbd>1</kbd>–<kbd>3</kbd> hurtig · <kbd>↑</kbd><kbd>↓</kbd> beløb':''}</div>`:''}
   </div></div>`;
   tickRing()}
 /* ---------- pre-selected actions (when it is not your turn) ---------- */
@@ -1994,9 +2038,10 @@ function runPre(prev){
   const betting=['preflop','flop','turn','river'].includes(h.phase);if(!betting){PRE=null;return}
   const toCall=h.curBet-p.bet;
   // someone bet: a plain "Check" no longer fits, so it is dropped
-  if(PRE.kind==='check'&&toCall>0){PRE=null;lastBarKey='';renderDock();toast('Nogen bettede, så dit forvalg “Check” er fjernet.');return}
+  if(PRE.kind==='check'&&toCall>0){PRE=null;lastBarKey='';renderDock();ACT_KEY='';renderActbar();toast('Someone bet, so your “Check” pre-select was cleared.');return}
+  if(PRE.kind==='callx'&&h.curBet!==PRE.bet){PRE=null;lastBarKey='';renderDock();ACT_KEY='';renderActbar();toast('The bet changed, so your “Call” pre-select was cleared.');return}
   if(h.toAct!==ms)return;
-  const kind=PRE.kind==='cf'?(toCall>0?'fold':'check'):PRE.kind==='any'?(toCall>0?'call':'check'):'check';
+  const kind=PRE.kind==='cf'?(toCall>0?'fold':'check'):(PRE.kind==='any'||PRE.kind==='callx')?(toCall>0?'call':'check'):'check';
   PRE=null;setTimeout(()=>{if(S?.hand?.id===h.id&&S.hand.toAct===ms)send('act',{kind,to:0,handId:h.id})},250)}
 /* ---------- TV mode for spectators ---------- */
 let TV=new URLSearchParams(location.search).get('tv')==='1';
@@ -2005,8 +2050,10 @@ document.documentElement.classList.toggle('tv',TV);
 function fracText(v){const h=S?.hand,p=S?.seats[mySeat()];if(!h||!p)return'';const pot=S.seats.reduce((a,q)=>a+(q?.inHand?q.total:0),0),toCall=Math.max(0,h.curBet-p.bet);
   const f=(v-h.curBet)/Math.max(1,pot+toCall);return `${h.curBet>0?'Hævningen':'Buddet'} er <b>${fracLabel(f)}</b> <span style="opacity:.7">(${Math.round(f*100)}% af ${fmt(pot+toCall)})</span>`}
 function stepRaise(d){const r=$('raiseRange');if(!r)return;const st=S.bb;let v=Math.round((+r.value+d*st)/st)*st;v=Math.max(+r.min,Math.min(+r.max,v));setRaise(v)}
-function setRaise(v){const big=$('raiseBig');if(big)big.textContent=fmt(+v);const r=$('raiseRange'),n=$('raiseNum');if(r)r.value=v;if(n)n.value=v;const l=$('raiseLbl');if(l)l.textContent=`${S.hand.curBet>0?'Raise til':'Bet'} ${fmt(v)}`;const fl=$('fracLine');if(fl)fl.innerHTML=fracText(+v)}
-document.addEventListener('input',e=>{if(e.target.id==='raiseRange'||e.target.id==='raiseNum')setRaise(+e.target.value)});
+function setRaise(v,fromNum){const r=$('raiseRange'),n=$('raiseNum');if(!r)return;v=Math.max(+r.min,Math.min(+r.max,Math.round(+v)||+r.min));RAISE_V=v;r.value=v;if(n&&!fromNum)n.value=v;
+  const big=$('raiseBig');if(big)big.textContent=fmt(v);const l=$('raiseLbl');if(l)l.textContent=v>=+r.max?'All-in':(S.hand.curBet>0?'Raise to':'Bet')}
+document.addEventListener('input',e=>{if(e.target.id==='raiseRange')setRaise(+e.target.value);if(e.target.id==='raiseNum'&&e.target.value!=='')setRaise(+e.target.value,true)});
+document.addEventListener('change',e=>{if(e.target.id==='raiseNum')setRaise(+e.target.value)});
 addEventListener('resize',()=>{if(S)render();else layoutSeats()});
 
 /* ---------- v6: gags, commentator, sound settings and the final show ---------- */
