@@ -827,6 +827,13 @@ body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   .has-actbar .app{padding-bottom:240px}
   .has-actbar .caster{bottom:230px}
 }
+/* v18: calm table – nothing moves unless something happens */
+#aurora{opacity:.5}
+.av svg,.seat.turn .av svg,.seat.winner .av svg{animation:none!important}
+.tupilak{display:none}
+body.myturn::after{animation:none;opacity:.7;box-shadow:inset 0 0 0 3px rgba(92,242,168,.45)}
+.ab-main .btn.fold.armed,.ps-b.fold.armed{animation:none}
+.seat.winner .plate{box-shadow:0 0 0 2px var(--aurora)}
 /* v17: the finger */
 .finger{position:absolute;left:0;top:0;z-index:42;font-size:clamp(44px,5vw,70px);pointer-events:none;will-change:transform;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}
 .fingerbtn{margin-left:6px}
@@ -989,8 +996,7 @@ setTimeout(()=>{let n=0;const t0=performance.now();const f=()=>{n++;if(performan
   const bands=[{c:'92,242,168',y:.22,a:.5,sp:.25,amp:.07},{c:'122,108,255',y:.16,a:.28,sp:.18,amp:.09},{c:'92,242,168',y:.32,a:.3,sp:.33,amp:.05}];
   let last=0;
   function frame(ms){
-    if(!reduce)requestAnimationFrame(frame);
-    if(document.hidden||ms-last<(LITE?2000:33))return;last=ms;const t=ms/1000;
+    last=ms;const t=ms/1000;
     ax.clearRect(0,0,AW,AH);ax.globalCompositeOperation='lighter';
     bands.forEach((b,bi)=>{for(let x=0;x<AW;x+=2){const nx=x/AW;
       const y=AH*(b.y+b.amp*Math.sin(nx*5+t*b.sp+bi)+.03*Math.sin(nx*13-t*b.sp*1.7));
@@ -1526,7 +1532,7 @@ function nextAllin(){
 const TANK_MS=10000;
 const TANK_LINES=['Narhvalen tager lige en selfie først.','Sælen leder efter den rigtige nuance af rød.','Koen tygger drøv. Langsomt.','Ræven tænker. Tremendous tænkning.','Geden øver nye dansetrin.','Rypen danser rundt i ringen.','Ørnen cirkler. Langsomt.','Stimen holder møde. Alle 1000.','The Bully kigger på dig. Længe.','Hans venter. Han har ventet ved åndehuller i timevis.'];
 function tankHTML(i){return `<div class="tank"><div class="glass"><i class="weed w1"></i><i class="weed w2"></i>${[18,42,64,82].map((x,k)=>`<i class="bub" style="left:${x}%;animation-delay:${-k*.55}s"></i>`).join('')}<div class="who">${avatar(i)}</div></div><div class="lbl">In the tank med ${esc(CHARS[i].name)}<small>${esc(TANK_LINES[i])}</small></div></div>`}
-function updateTanks(){const h=S?.hand;const on=h&&['preflop','flop','turn','river'].includes(h.phase)?h.toAct:-1;
+function updateTanks(){return;const h=S?.hand;const on=h&&['preflop','flop','turn','river'].includes(h.phase)?h.toAct:-1;
   for(let k=0;k<N;k++){const e=SE[k];if(!e||!e.tank)continue;const t=k===on&&clock()-h.turnAt>TANK_MS;
     if(t&&!e.tank.firstChild)SFX.blub();setHTML(e.tank,t?tankHTML(k):'')}}
 
@@ -1603,8 +1609,7 @@ const WIN_SFX=[
 function celebrate(s,h){
   const ms=mySeat();const won=h.result.winners.some(w=>w.seat===ms);
   const top=[...h.result.winners].sort((a,b)=>b.amount-a.amount)[0];
-  if(won)confetti(.6);
-  if(top&&WIN_SFX[top.seat]){SFX.chip(.6);try{SFX.as('char',()=>WIN_SFX[top.seat]())}catch{}}else if(won)SFX.win();else{SFX.flip();SFX.chip(.6)}
+  SFX.chip(.6);
   runEndFx(h);
   try{const win=new Set(h.result.winners.map(w=>w.seat)),tot=s.seats.map(q=>q&&q.inHand?q.total||0:0);let lo=-1;tot.forEach((t,i)=>{if(!win.has(i)&&t>0&&(lo<0||t>tot[lo]))lo=i});
     if(lo>=0&&tot[lo]>=Math.max(25*s.bb,250))queueGag({t:'milk',seat:lo,amt:tot[lo]})}catch(e){}
@@ -1616,7 +1621,7 @@ function celebrate(s,h){
     ?`<div class="jp-inner"><small>Kalaallit Nunaat Royal</small><b>ROYAL FLUSH<br>JACKPOT!</b><span>${esc(nick(s,j.seat))} får ${fmt(j.amount)} chips fra banken</span></div>`
     :`<div class="jp-inner"><small>Husregel</small><b>7-2<br>BONUS!</b><span>${esc(nick(s,j.seat))} vandt med 7-2 og snupper ${fmt(j.amount)} fra bordet</span></div>`;
   el.hidden=false;void el.offsetWidth;el.classList.add('on');
-  SFX.jackpot();confetti(j.type==='royal'?2:1.3,j.type==='royal'?['#ffd23f','#fff3b0','#d4122f','#f6f9fb']:['#d4122f','#f6f9fb','#5cf2a8']);
+  SFX.jackpot();
   clearTimeout(celebrate.t);celebrate.t=setTimeout(()=>{el.classList.remove('on');setTimeout(()=>el.hidden=true,500)},4800);
 }
 
@@ -1730,7 +1735,7 @@ function render(){
   if(reveal&&h.result){
     const w=h.result.winners;
     const runsTxt=twoRuns?`<span>${h.result.runs.map((r,k)=>`Run ${k+1}: ${r.winners.map(x=>esc(nick(s,x.seat))).join(' & ')} · ${esc(r.winners[0]?.hand||'')}`).join('<br>')}</span>`:`<span>${esc(w[0].hand||'Alle andre foldede')}</span>`;
-    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}${runsTxt}<em>“${esc(CHARS[w[0].seat].win)}”</em>${ghost.length?'<small class="ghostnote">Grå kort = det, der ville være kommet</small>':''}</div>`;
+    banner=`<div class="banner">${w.map(x=>esc(nick(s,x.seat))).join(' & ')} vinder${w.length===1?` ${fmt(w[0].amount)}`:''}${runsTxt}${ghost.length?'<small class="ghostnote">Grå kort = det, der ville være kommet</small>':''}</div>`;
   } else if(h?.phase==='rit'){
     const v=h.ritVotes||{};banner=`<div class="banner rit-banner">Run it twice?<span>${(h.ritSeats||[]).map(i=>`${esc(nick(s,i))}: ${v[i]===undefined?'…':v[i]?'to gange':'én gang'}`).join(' · ')}</span></div>`;
   }
@@ -1807,7 +1812,7 @@ function render(){
     let bubble='';const say=h?.say;
     const rx=REACTS_SHOWN[i];
     if(rx&&Date.now()-rx.t<4000)bubble=`<div class="bubble react ${rx.taunt?'taunt':''} ${pos.y<50?'below':''}" data-at="${rx.at}">${esc(rx.text)}</div>`;
-    else if(say&&say.seat===i&&clock()-say.at<5500){const line=sayLine(s);if(line)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${say.at}">${esc(line)}</div>`}
+    else if(false&&say&&say.seat===i&&clock()-say.at<5500){const line=sayLine(s);if(line)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${say.at}">${esc(line)}</div>`}
     if(!bubble&&p.joinedAt&&clock()-p.joinedAt<6000&&!h?.say)bubble=`<div class="bubble ${pos.y<50?'below':''}" data-at="${p.joinedAt}">${esc(CHARS[i].sit)}</div>`;
     setHTML(e.bub,bubble);
     setHTML(SE[i].stack,chipsNow>0?`<div class="pstack" data-pos="${i}" aria-hidden="true">${stacksHTML(chipsNow,32,10)}</div>`:'');
@@ -2195,14 +2200,14 @@ addEventListener('resize',()=>{if(S)render();else layoutSeats()});
 let armFin=false;
 const nickOf=i=>S?.seats[i]?.nick||CHARS[i]?.name||'Nogen';
 const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-function decoHTML(s,h,i,p,reveal){let d='';
+function decoHTML(s,h,i,p,reveal){return'';let d='';
   if(p.ears>0)d+='<i class="d-ears" title="Dum abe 🐒"></i>';
   if(p.curse>0)d+='<i class="d-curse" title="Forbandet af tupilakken">👹</i>';
   if(p.tilt)d+='<i class="d-steam" title="Tilt!">♨️</i>';
   if(h&&reveal&&h.fx){if(h.fx.some(f=>f.t==='nose'&&f.seat===i))d+='<i class="d-nose" title="Pinocchio"></i>';
     if(h.fx.some(f=>f.t==='chicken'&&f.seat===i))d+='<i class="d-stamp" title="Kujon">🐔</i>'}
   return d}
-function headsHTML(s,p){const hs=s.stats?.[p.uid]?.heads||[];if(!hs.length)return'';
+function headsHTML(s,p){return'';const hs=s.stats?.[p.uid]?.heads||[];if(!hs.length)return'';
   return `<div class="heads" title="Hovedjæger: ${hs.length} trofæ${hs.length>1?'er':''}">${hs.slice(-6).map(k=>avatar(k)).join('')}${hs.length>6?`<small>+${hs.length-6}</small>`:''}</div>`}
 
 /* events from the server: play each once, end-of-hand ones when the cards are revealed */
@@ -2213,7 +2218,7 @@ function handleFx(){const h=S?.hand;
   (h?.fx||[]).forEach((f,k)=>{const key=h.id+':'+k;if(FXSEEN.has(key)||FX_END.has(f.t))return;FXSEEN.add(key);queueGag(f)})}
 function runEndFx(h){(h.fx||[]).forEach((f,k)=>{const key=h.id+':'+k;if(FXSEEN.has(key))return;FXSEEN.add(key);queueGag(f)})}
 const GAGQ=[];let gagBusy=false;
-function queueGag(f){GAGQ.push(f);if(GAGQ.length>6)GAGQ.splice(0,GAGQ.length-6);if(!gagBusy)nextGag()}
+function queueGag(f){if(f.t!=='milk')return;GAGQ.push(f);if(GAGQ.length>6)GAGQ.splice(0,GAGQ.length-6);if(!gagBusy)nextGag()}
 function nextGag(){gagBusy=true;if(aiBusy||!$('finale').hidden){setTimeout(nextGag,700);return}
   const f=GAGQ.shift();if(!f){gagBusy=false;return}
   let d=2800;try{d=playGag(f)||2800}catch(e){console.error(e)}setTimeout(nextGag,d+250)}
@@ -2254,7 +2259,7 @@ const CAST={
   bust:['{n} er flad og går op på fjeldet. Farvel, qivittoq.'],
   head:['{n} tager {o}s hoved med hjem. Hovedjæger!'],
   chicken:['Bok bok! {n} foldede en hånd, der ville have vundet. Kujon!']};
-function caster(f){const L=CAST[f.t];if(!L)return;
+function caster(f){return;const L=CAST[f.t];if(!L)return;
   const line=L[Math.floor(Math.random()*L.length)].replace(/\{n\}/g,f.seat!=null?nickOf(f.seat):'').replace(/\{p\}/g,f.pct!=null?Math.round(f.pct):'').replace(/\{o\}/g,f.of!=null?CHARS[f.of].name:'');
   say(line)}
 function say(line){const el=$('caster');el.innerHTML=`🎙️ ${esc(line)}`;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(say.t);say.t=setTimeout(()=>el.classList.remove('show'),5200);speak(line)}
