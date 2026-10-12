@@ -53,8 +53,7 @@ function viewFor(room, pid) {
   if (s.hand) { delete s.hand.bd; delete s.hand.rest; delete s.hand.bd2; }
   s.now = Date.now();
   s.code = room.code;
-  // the shaman's prophecy stays sealed until the final show
-  if (!s.finale) { s.prophecySealed = !!s.prophecy; delete s.prophecy; }
+  delete s.prophecy;
   return s;
 }
 function broadcast(room) {
@@ -309,7 +308,7 @@ io.on('connection', (sock) => {
   });
   const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemaskinen!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
     'Er du bange?', 'Fold nu bare', 'Jeg lugter bluff', 'Sikke en torsk 🐟', 'Tag dig sammen', 'Det var dumt', 'Hurtigere, bedstemor!', 'Nice hand… NOT', 'Kom så!', 'GG'];
-  const THROWS = ['torsk', 'snebold', 'tupilak', 'isklump', 'kaffe', 'finger'];
+  const THROWS = ['finger'];
   let lastReact = 0;
   sock.on('react', (m) => {
     const d = sock.data || {}, room = rooms.get(d.code);

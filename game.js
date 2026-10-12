@@ -167,9 +167,6 @@ function startHand(s){
   const posted={};if(sbSeat>=0)posted[sbSeat]=put(s.seats[sbSeat],s.sb);posted[bbSeat]=(posted[bbSeat]||0)+put(s.seats[bbSeat],s.bb);
   s.hand={id:Math.random().toString(36).slice(2,10),phase:'preflop',board:[],bd:enc(board),rest:enc(deck.slice(k+8)),
     curBet:Math.max(sbSeat>=0?s.seats[sbSeat].bet:0,s.seats[bbSeat].bet,s.bb),sAggr:-1,minRaise:s.bb,toAct:-1,turnAt:Date.now(),sbSeat,bbSeat,result:null,no:(s.hand?.no||0)+1,extraWait:0,shows:{},fracs:{},think:{},fx:[],posted,raised:{},minr:{},foldAt:{},aggr:-1,overbet:-1};
-  // the shaman's prophecy for the night, sealed until the final show
-  if(!s.prophecy){const u=players.map(i=>({uid:s.seats[i].uid,nick:s.seats[i].nick}));const a=crypto.randomInt(u.length);let b=crypto.randomInt(u.length-1);if(b>=a)b++;
-    s.prophecy={win:u[a],fish:u[b],at:Date.now()};s.hand.fx.push({t:'shaman'});log(s,'🔮 Shamanen har talt. Spådommen for aftenen er forseglet.')}
   log(s,`Hånd #${s.hand.no}: ${nick(s,dealer)} har knappen. ${sbSeat>=0?`SB ${nick(s,sbSeat)} ${s.sb}`:'Død small blind'} / BB ${nick(s,bbSeat)} ${s.bb}.`);
   s.hand.toAct=bbSeat;
   advance(s,bbSeat);
@@ -204,9 +201,6 @@ function advance(s,from){
     // all-in: the hands are turned face up, TV style, with the chance to win
     h.open=Object.fromEntries(L.map(i=>[i,dec(s.seats[i].hole)]));
     h.eqs=[{n:h.board.length,eq:equity(h.open,h.board)}];
-    L.forEach(i=>{const e=h.eqs[0].eq[i],pct=e.w+e.t,p=s.seats[i],st=stat(s,p.uid);
-      if(i===h.aggr&&p.allin){if(pct<30){h.fx.push({t:'gambler',seat:i,pct});st.gambler++;log(s,`🤠 ${p.nick} gik all-in med ${Math.round(pct)} % chance. Know when to fold 'em…`)}}
-      else if(pct<25){h.fx.push({t:'ape',seat:i,pct});st.ape++;p.ears=2;log(s,`🐒 Dum abe! ${p.nick} gik med på en lortehånd (${Math.round(pct)} %).`)}});
   }
   if(bettingOver&&h.phase!=='river'&&s.rit&&!h.ritDone){
     h.prevPhase=h.phase;h.phase='rit';h.toAct=-1;h.ritVotes={};h.ritAt=Date.now();h.ritSeats=L;
