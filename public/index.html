@@ -825,6 +825,39 @@ body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   .has-actbar .app{padding-bottom:240px}
   .has-actbar .caster{bottom:230px}
 }
+/* v16: simpler */
+.pills{align-items:center}
+.pills-more{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.pill.invite{background:rgba(92,242,168,.14);border-color:var(--aurora);color:#fff}
+.caster{top:calc(74px + env(safe-area-inset-top));bottom:auto!important;transform:translate(-50%,-180%)}
+.caster.show{transform:translate(-50%,0)}
+.is-seated .seat.vacant{pointer-events:none}
+.is-seated .seat.vacant .empty-seat{background:none;border:0;padding:0}
+.is-seated .seat.vacant .empty-seat .cn,.is-seated .seat.vacant .empty-seat .cta{display:none}
+.is-seated .seat.vacant .av-empty{opacity:.22;filter:grayscale(1);margin-top:0;--w:40px}
+@media (max-width:700px){
+  .is-seated .seat.vacant{display:none}
+  .plate .cn,.plate .lead-badge{display:none}
+  .plate .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .dealer{width:20px;height:20px;font-size:11px;right:-6px;top:-6px}
+  .top .brand small{display:none}
+  .seat .plate{flex-direction:column;gap:2px;text-align:center;padding:4px 4px 6px}
+  .seat .plate .av{margin-top:-20px}
+  .seat .plate .pt{width:100%}
+  .is-seated .top .brand h1{font-size:20px}.is-seated .top .brand svg{width:28px;height:28px}
+}
+.reacts>.btn{align-self:flex-start}
+.lb-toggle{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer}
+.lb-toggle h2{margin:0}.lb-toggle .lb-arr{margin-left:auto;font-family:var(--f-label);font-size:12px;letter-spacing:.1em;color:var(--aurora)}
+.lb-toggle:focus-visible{outline:3px solid #ffd23f;outline-offset:4px;border-radius:6px}
+.lead-more{margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.status.keys{font-size:12px;color:var(--muted)}.status.keys kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.lobby-card .joinrow input::placeholder{letter-spacing:.04em;font-size:16px}
+.nickmodal{position:fixed;inset:0;z-index:120;background:rgba(2,6,14,.72);display:grid;place-items:center;padding:16px}
+.nickmodal[hidden]{display:none}
+.nm-box{width:min(380px,100%);background:#0b1424;border:1px solid var(--aurora);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.nm-box h2{margin:0}.nm-who{display:flex;align-items:center;gap:10px;color:var(--bone)}.nm-who:empty{display:none}.nm-who .av{--w:44px;margin:0}
+.nm-box input{font-size:18px;padding:12px}.nm-box .row{justify-content:flex-end;gap:8px}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -917,6 +950,7 @@ body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 <div class="toast" id="toast" hidden></div>
 <canvas id="confetti" hidden></canvas>
 <div class="caster" id="caster" aria-live="polite"></div>
+<div class="nickmodal" id="nickModal" hidden role="dialog" aria-modal="true" aria-labelledby="nickModalT"><div class="nm-box"><h2 id="nickModalT">Hvad skal du hedde?</h2><div class="nm-who" id="nickModalWho"></div><input type="text" id="nickModalIn" maxlength="16" placeholder="Dit navn" autocomplete="off" aria-label="Dit navn"><div class="row"><button class="btn ghost" id="nickCancel">Annuller</button><button class="btn go" id="nickGo">Sæt mig ned</button></div></div></div>
 <div class="actbar" id="actbar" hidden aria-live="polite" aria-label="Dine knapper"></div>
 <div class="volpanel" id="volPanel" hidden></div>
 <div class="finale" id="finale" hidden aria-live="polite"></div>
@@ -1514,11 +1548,16 @@ function throwAnim(r){
 function renderReacts(){
   const r=$('reacts');const ms=mySeat();const sat=joined&&ms>=0&&!!S;r.hidden=!sat;if(!sat)return;
   const others=S.seats.map((p,i)=>p&&i!==ms?{i,p}:null).filter(Boolean);
-  setHTML(r,`<div class="rrow"><span>Sig</span>${REACTS.map((t,i)=>`<button data-react="${i}">${esc(t)}</button>`).join('')}</div>
+  if(!UI.taunts){setHTML(r,`<button class="btn small ghost" id="tauntBtn">😂 Taunts og kast</button>`);return}
+  setHTML(r,`<div class="rrow"><button class="btn tiny ghost" id="tauntBtn">Skjul ▴</button></div><div class="rrow"><span>Sig</span>${REACTS.map((t,i)=>`<button data-react="${i}">${esc(t)}</button>`).join('')}</div>
     <div class="rrow"><span>Kast</span>${throwPick<0?THROWS.map(([e,n],i)=>`<button class="thr" data-throw="${i}">${e} ${n}</button>`).join('')
       :`<b>${THROWS[throwPick][0]} ${THROWS[throwPick][1]} – på hvem?</b> ${others.map(({i,p})=>`<button class="tg" data-target="${i}">${esc(p.nick)}</button>`).join('')||'<i>Ingen at kaste på endnu</i>'} <button data-throw="-1">Fortryd</button>`}</div>`)}
 
 const REACTS_SHOWN={};
+const UI={more:false,taunts:false,lb:false,lead:false};
+try{Object.assign(UI,JSON.parse(localStorage.getItem('nanoq-ui')||'{}'),{more:false})}catch{}
+function saveUI(){try{localStorage.setItem('nanoq-ui',JSON.stringify(UI))}catch{}}
+let PEND_SEAT=null;
 function confetti(power=1,colors=['#d4122f','#f6f9fb','#5cf2a8','#8fdde0','#ffd23f']){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const cv=$('confetti'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;cv.hidden=false;
@@ -1616,10 +1655,11 @@ function moveCamera(){
 
 function render(){
   document.documentElement.classList.toggle('on-landing',!joined);
+  document.documentElement.classList.toggle('is-seated',joined&&mySeat()>=0);
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`<button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'Lyd til':'Lyd fra'}</button>${s.code?`<button class="pill pill-btn" id="copyLink" title="Del linket til bordet">Bord <b>${esc(s.code)}</b> · Del link</button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span>${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lyd</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button>${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}`;
+  $('pills').innerHTML=`${s.code?`<button class="pill pill-btn invite" id="copyLink" title="Del linket til bordet">📨 Inviter venner <b>${esc(s.code)}</b></button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'🔊 Lyd':'🔇 Lyd'}</button><button class="iconbtn" id="moreBtn" aria-expanded="${UI.more}">${UI.more?'Mindre ▴':'Mere ▾'}</button>`+(UI.more?`<div class="pills-more">${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lydstyrke</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button></div>`:'');
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   ensureCenter();
@@ -1679,7 +1719,7 @@ function render(){
   for(let i=0;i<N;i++){
     const p=s.seats[i],pos=seatPos(i,ms),M=SM[i];
     if(!p){
-      const off=seatOff(ms);const e=seatParts(i,'empty');e.seat.className='seat';
+      const off=seatOff(ms);const e=seatParts(i,'empty');e.seat.className='seat vacant';
       setHTML(e.empty,`<button class="empty-seat ${off?'':'pick'}" data-sit="${i}" ${off?'disabled':''} title="${esc(CHARS[i].title)}">${avatar(i,'av av-empty')}<span class="cn">${esc(CHARS[i].name)}</span><span class="cta">${off?'Ledig':'Vælg mig'}</span></button>`);
       setHTML(SE[i].stack,'');setHTML(SE[i].bet,'');M.kind='none';M.hid=null;M.key='';continue;
     }
@@ -1786,9 +1826,9 @@ function renderDock(){
   if(!p){
     const key='join'+busy;if(key===lastBarKey)return;lastBarKey=key;
     let saved='';try{saved=localStorage.getItem('nanoq-nick')||''}catch{}
-    dock.innerHTML=`<h2>Aluu! Vælg din karakter</h2><p>Hver plads ved bordet er en karakter. Skriv dit kaldenavn, og tryk på den, du vil være. Du starter med ${fmt(s.stack)} chips.</p>
+    dock.innerHTML=`<h2>Sæt dig ved bordet</h2><p>Skriv dit navn og tryk på en ledig plads. Du får ${fmt(s.stack)} chips.</p>
       <div class="row"><div class="field"><label for="nick">Kaldenavn</label><input type="text" id="nick" maxlength="16" placeholder="fx Nanoq-Niels" value="${esc(saved)}"></div>
-      <button class="btn go" id="quickSit" ${busy?'disabled':''}>Giv mig en tilfældig</button></div>`;
+      <button class="btn go" id="quickSit" ${busy?'disabled':''}>Sæt mig et sted</button></div>`;
     return;
   }
   const betting=h&&['preflop','flop','turn','river'].includes(h.phase);
@@ -1801,7 +1841,7 @@ function renderDock(){
   }
   if(betting&&h.toAct===ms){
     const key=`turn${h.id}${busy}`;if(key===lastBarKey)return;lastBarKey=key;
-    dock.innerHTML=`<div class="row corner-note" style="justify-content:space-between"><h2>Din tur</h2><span class="status"><span class="d">Dine knapper ligger i hjørnet nederst til højre ↘</span><span class="m">Dine knapper ligger nederst ↓</span>${KEYS_OK?' · Keys: <kbd>Space</kbd> check/call · <kbd>F</kbd> fold · <kbd>R</kbd> raise · <kbd>1</kbd>–<kbd>5</kbd> bet size · <kbd>↑↓</kbd> amount':''}</span></div>`;
+    dock.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Din tur</h2>${KEYS_OK?'<span class="status keys"><kbd>Space</kbd> check/call · <kbd>F</kbd> fold · <kbd>R</kbd> raise</span>':''}</div>`;
     return;
   }
   // waiting states
@@ -1816,7 +1856,6 @@ function renderDock(){
     msg='Venter på at alle stemmer om run it twice…';
   } else if(p.inHand&&!p.folded){
     msg=`Venter på ${esc(nick(s,h.toAct))}…`;
-    if(betting&&!p.allin&&!p.sitout&&p.chips>0)msg+=' Forvalg ligger i hjørnet.';
   } else msg=p.inHand?'Du har foldet. Næste hånd kommer.':'Du er med fra næste hånd.';
   if(p.chips===0&&!(p.inHand&&betting)){
     if(isOwner)btns+=`<button class="btn small" id="rebuyBtn" ${busy?'disabled':''}>Køb ind igen (${fmt(s.stack)})</button>`;
@@ -1871,7 +1910,9 @@ function renderBoardLb(s,CS,reveal){
     return{uid,nick:l.nick,seat:i>=0?i:l.seat,here:!!p,in:l.in,now,res:now-l.in,won:st.won||0,big:st.biggest||0}}).sort((a,b)=>b.res-a.res||b.won-a.won);
   const last=rows.length>1&&rows[rows.length-1].res<0?rows[rows.length-1].uid:null;
   const T=titlesFor(s,ids);
-  setHTML(el,`<div class="row" style="justify-content:space-between"><h2>🏆 Leaderboard</h2><span class="lead-sub">Hvem har vundet og tabt i aften</span></div>
+  const meRow=rows.findIndex(r=>r.uid===me);
+  if(!UI.lb){setHTML(el,`<button class="lb-toggle" id="lbToggle" aria-expanded="false"><h2>🏆 Leaderboard</h2><span class="lead-sub">${rows[0]?`Fører: <b>${esc(rows[0].nick)}</b> ${rows[0].res>0?'+':''}${fmt(rows[0].res)}`:''}${meRow>0?` · Du er nr. ${meRow+1}`:''}</span><span class="lb-arr">Vis ▾</span></button>`);return}
+  setHTML(el,`<button class="lb-toggle" id="lbToggle" aria-expanded="true"><h2>🏆 Leaderboard</h2><span class="lead-sub">Hvem har vundet og tabt i aften</span><span class="lb-arr">Skjul ▴</span></button>
     <table><thead><tr><th>Spiller</th><th>Sat ind</th><th>Har nu</th><th>Resultat</th><th class="hide-s">Vundne</th><th class="hide-s">Største pulje</th></tr></thead><tbody>
     ${rows.map((r,k)=>`<tr class="${k===0?'first':''}"><td class="who"><span class="rk">${k+1}</span>${r.seat>=0?avatar(r.seat):''}<span>${esc(r.nick)}${r.uid===me?' (dig)':''}${k===0&&r.res>0?'<span class="badge g">Høvding</span>':''}${r.uid===last?'<span class="badge f">Dagens torsk 🐟</span>':''}${(T[r.uid]||[]).map(([n,why])=>`<span class="badge t" title="${esc(why)}">${n}</span>`).join('')}<small>${r.seat>=0?esc(CHARS[r.seat].name):''}${r.here?'':' · har forladt bordet'}</small></span></td>
       <td>${fmt(r.in)}</td><td>${fmt(r.now)}</td><td class="${r.res>0?'pos':r.res<0?'neg':''}">${r.res>0?'+':''}${fmt(r.res)}</td><td class="hide-s">${r.won}</td><td class="hide-s">${fmt(r.big)}</td></tr>`).join('')}
@@ -1889,7 +1930,7 @@ function titlesFor(s,ids){const st=s.stats||{},T={},add=(uid,n,why)=>(T[uid]=T[u
 
 /* ---------- chat ---------- */
 const CHAT=[];let chatHidden=false,chatUnread=0,chatKey='';
-try{chatHidden=localStorage.getItem('nanoq-chat-hidden')==='1'}catch{}
+try{const v=localStorage.getItem('nanoq-chat-hidden');chatHidden=v==null?innerWidth<=700:v==='1'}catch{chatHidden=innerWidth<=700}
 function renderChat(){
   const el=$('chatBox');if(!joined||!S){el.hidden=true;chatKey='';return}el.hidden=false;
   const seated=mySeat()>=0,key=`${chatHidden}${seated}`;
@@ -1916,7 +1957,7 @@ function renderLead(){
   const s=S||emptyState();
   const players=s.seats.map((p,i)=>p?{i,p}:null).filter(Boolean);
   const reqs=Object.keys(s.requests||{}).map(uid=>({uid,i:s.seats.findIndex(p=>p?.uid===uid)})).filter(r=>r.i>=0);
-  const key=JSON.stringify([s.sb,s.bb,s.stack,s.paused,s.jpRoyal,s.jp72,s.rit,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,armFin,busy]);
+  const key=JSON.stringify([UI.lead,s.sb,s.bb,s.stack,s.paused,s.jpRoyal,s.jp72,s.rit,players.map(({i,p})=>[i,p.nick,p.chips,p.leaving,p.rebuys]),reqs.map(r=>[r.uid,s.requests[r.uid]?.amount]),armReset,armFin,busy]);
   if(key===leadKey)return;leadKey=key;
   // keep anything the leader is typing
   const keep={};el.querySelectorAll('input').forEach(x=>{if(x.value!==x.defaultValue)keep[x.id]=x.value});
@@ -1927,7 +1968,8 @@ function renderLead(){
       <div class="row"><button class="btn small ${armFin?'raise':'ghost'}" id="finaleBtn" ${busy?'disabled':''}>${armFin?'Sikker? Tryk igen':'🏁 Afslut aftenen'}</button><button class="btn small ${s.paused?'go':'ghost'}" id="pauseBtn" ${busy?'disabled':''}>${s.paused?'Slut kaffemik':'Kaffemik-pause'}</button></div>
     </div>
     ${reqs.map(r=>`<div class="preq"><span><b>${esc(s.seats[r.i].nick)}</b> er busted og beder om ${fmt(s.requests[r.uid].amount||s.stack)} chips${s.seats[r.i].rebuys?` (har købt ind ${s.seats[r.i].rebuys} gang${s.seats[r.i].rebuys>1?'e':''} før)`:''}.</span><div class="row"><button class="btn tiny go" data-lead="grant" data-seat="${r.i}" ${busy?'disabled':''}>Ok, giv ${fmt(s.requests[r.uid].amount||s.stack)}</button><button class="btn tiny ghost" data-lead="deny" data-seat="${r.i}" ${busy?'disabled':''}>Afvis</button></div></div>`).join('')}
-    <div class="plist">
+    <button class="lb-toggle lead-more" id="leadMore" aria-expanded="${UI.lead}"><b>⚙️ Chips og indstillinger</b><span class="lead-sub">Blinds ${s.sb}/${s.bb} · startchips ${fmt(s.stack)}</span><span class="lb-arr">${UI.lead?'Skjul ▴':'Vis ▾'}</span></button>
+    ${UI.lead?`<div class="plist">
       ${players.length?players.map(({i,p})=>`<div class="prow">
         <span class="pn">${esc(p.nick)}${p.uid===me?' (dig)':''}${p.rebuys?`<small class="rb"> · ${p.rebuys} genkøb</small>`:''}</span>
         <span class="pc">${fmt(p.chips)}</span>
@@ -1951,7 +1993,7 @@ function renderLead(){
       <label class="switch" for="setRit"><input type="checkbox" id="setRit" ${s.rit?'checked':''}> Run it twice</label>
     </div>
     <p class="lead-sub" style="margin:0">Royal flush-jackpotten betales af banken. 7-2-bonussen betaler hver spiller ved bordet til den, der vinder en pulje med 7-2. Sæt et beløb til 0 for at slå det fra.</p>
-    <div class="row" style="justify-content:space-between"><span class="lead-sub">Nye blinds gælder fra næste hånd</span><button class="btn tiny warn" id="resetBtn" ${busy?'disabled':''}>${armReset?'Klik igen for at nulstille alt':'Nulstil bord'}</button></div>`;
+    <div class="row" style="justify-content:space-between"><span class="lead-sub">Nye blinds gælder fra næste hånd</span><button class="btn tiny warn" id="resetBtn" ${busy?'disabled':''}>${armReset?'Klik igen for at nulstille alt':'Nulstil bord'}</button></div>`:''}`;
   Object.entries(keep).forEach(([id,v])=>{const x=$(id);if(x)x.value=v});
   if(focusId&&$(focusId))$(focusId).focus();
 }
@@ -1977,7 +2019,7 @@ document.addEventListener('click',e=>{
     navigator.clipboard?.writeText(url).then(()=>toast('Linket er kopieret. Send det til vennerne.'),()=>toast(url));return}
   if(t.id==='soundBtn'){SFX.on=!SFX.on;try{localStorage.setItem('nanoq-sound',SFX.on?'1':'0')}catch{}if(SFX.on){SFX.unlock();SFX.chip()}render();return}
   if(t.dataset.sit!=null||t.id==='quickSit'){
-    const n=getNick();if(!n){toast('Skriv et kaldenavn først.');$('nick')?.focus();return}
+    const n=getNick();if(!n){PEND_SEAT=t.dataset.sit!=null?+t.dataset.sit:-1;const m=$('nickModal');m.hidden=false;const ch=PEND_SEAT>=0?CHARS[PEND_SEAT]:null;$('nickModalWho').innerHTML=ch?`${avatar(PEND_SEAT)}<span>Du bliver <b>${esc(ch.name)}</b></span>`:'';setTimeout(()=>$('nickModalIn')?.focus(),50);return}
     try{localStorage.setItem('nanoq-nick',n)}catch{}
     send('sit',{nick:n,seat:t.dataset.sit!=null?+t.dataset.sit:-1});return;
   }
@@ -2021,6 +2063,13 @@ document.addEventListener('click',e=>{
   if(t.id==='leaveBtn'){send('leave');return}
   if(t.id==='sitoutBtn'){const p=S?.seats[mySeat()];if(p)send('sitout',{on:!p.sitout});return}
   if(t.dataset.pre){const h=S?.hand;if(!h)return;PRE=PRE&&PRE.hid===h.id&&PRE.kind===t.dataset.pre?null:{hid:h.id,kind:t.dataset.pre,amt:+(t.dataset.amt||0),bet:h.curBet};ACT_KEY='';renderActbar();lastBarKey='';renderDock();return}
+  if(t.id==='moreBtn'){UI.more=!UI.more;render();return}
+  if(t.id==='tauntBtn'){UI.taunts=!UI.taunts;saveUI();renderReacts();return}
+  if(t.id==='lbToggle'){UI.lb=!UI.lb;saveUI();render();return}
+  if(t.id==='leadMore'){UI.lead=!UI.lead;saveUI();leadKey='';renderLead();return}
+  if(t.id==='nickGo'){const v=($('nickModalIn')?.value||'').trim().slice(0,16);if(!v){$('nickModalIn')?.focus();return}
+    if($('nick'))$('nick').value=v;try{localStorage.setItem('nanoq-nick',v)}catch{}$('nickModal').hidden=true;send('sit',{nick:v,seat:PEND_SEAT??-1});PEND_SEAT=null;return}
+  if(t.id==='nickCancel'){$('nickModal').hidden=true;PEND_SEAT=null;return}
   if(t.id==='chatToggle'){chatHidden=!chatHidden;chatUnread=0;try{localStorage.setItem('nanoq-chat-hidden',chatHidden?'1':'0')}catch{}chatKey='';renderChat();return}
   if(t.id==='chatSend'){sendChat();return}
   if(t.id==='tvBtn'){setTV(!TV);return}
@@ -2029,7 +2078,7 @@ document.addEventListener('click',e=>{
     armReset=false;send('reset');return;
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click();
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click();if(e.key==='Enter'&&e.target.id==='nickModalIn')$('nickGo')?.click();if(e.key==='Enter'&&e.target.id==='nick')$('quickSit')?.click();
   if(e.key==='Enter'&&e.target.id==='chatIn'){e.preventDefault();sendChat();return}
   if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
   const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable)&&tg.type!=='range')return;
@@ -2288,14 +2337,30 @@ function joinRoom(){
   const code=roomCode();joined=false;S=null;lastBarKey='';
   if(!code||!sock?.connected){render();return}
   sock.timeout(8000).emit('join',{code,token:TOKEN},(err,res)=>{
+    // the server restarted and forgot the table: rebuild it from this browser's last snapshot
+    if(!err&&res?.error&&!joinRoom.tried){const snap=loadSnap(code);if(snap){joinRoom.tried=true;sock.timeout(8000).emit('restore',{code,token:TOKEN,snap},(e2,r2)=>{if(!e2&&r2?.ok){toast('Serveren var genstartet. Bordet er genskabt.');joinRoom()}else{joinRoom.tried=false;lobbyErr='Bordet findes ikke længere. Opret et nyt.';history.replaceState(null,'',location.pathname);render()}});return}}
+    joinRoom.tried=false;
     if(err||res?.error){lobbyErr=res?.error||'Kunne ikke finde bordet.';history.replaceState(null,'',location.pathname);render();return}
     me=res.pid;joined=true;lobbyErr='';
   });
 }
+/* a light copy of the table in this browser, so it survives a server restart */
+/* phones: keep your own seat and cards above the buttons at the bottom of the screen */
+let lastScrollHand=null;
+function keepSeatVisible(force){if(innerWidth>700||mySeat()<0||!S?.hand)return;const hid=S.hand.id;if(!force&&hid===lastScrollHand)return;lastScrollHand=hid;
+  requestAnimationFrame(()=>{const st=SE[mySeat()]?.seat,bar=$('actbar');if(!st)return;const r=st.getBoundingClientRect(),barH=bar&&!bar.hidden?bar.getBoundingClientRect().height:0;
+    const over=r.bottom-(innerHeight-barH-8);if(over>0)scrollBy({top:over,behavior:'smooth'})})}
+function saveSnap(s){if(!s?.code)return;const h=s.hand,mid=h&&h.phase!=='showdown';
+  const snap={at:Date.now(),sb:s.sb,bb:s.bb,stack:s.stack,jpRoyal:s.jpRoyal,jp72:s.jp72,rit:s.rit,leader:s.leader,dealer:s.dealer,lastBB:s.lastBB,ledger:s.ledger,stats:s.stats,
+    seats:s.seats.map(p=>p&&!p.leaving?{uid:p.uid,nick:p.nick,rebuys:p.rebuys||0,chips:p.chips+(mid&&p.inHand?p.total||0:0)}:null)};
+  try{localStorage.setItem('nanoq-snap-'+s.code,JSON.stringify(snap))}catch{}}
+function loadSnap(code){try{const v=JSON.parse(localStorage.getItem('nanoq-snap-'+code)||'null');return v&&Date.now()-v.at<12*3600e3?v:null}catch{return null}}
+// keeps the free server awake while someone has the table open
+setInterval(()=>{if(joined)fetch('/health',{cache:'no-store'}).catch(()=>{})},4*60e3);
 sock=io({transports:['websocket','polling']});
 sock.on('connect',joinRoom);
 sock.on('disconnect',()=>{$('conn').hidden=false});
-sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();handleFx(prev);turnAlert();
+sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);saveSnap(S);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();keepSeatVisible(S.hand&&S.hand.toAct===mySeat()&&prev?.hand?.toAct!==mySeat());handleFx(prev);turnAlert();
   // somebody just shoved: their character makes an entrance
   if(prev?.hand&&S.hand&&prev.hand.id===S.hand.id)S.seats.forEach((p,i)=>{if(p&&p.inHand&&p.allin&&!prev.seats[i]?.allin&&prev.seats[i]?.uid===p.uid)queueAllin(i)})});
 sock.on('connect',()=>{$('conn').hidden=true});
