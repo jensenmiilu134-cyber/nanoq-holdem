@@ -145,7 +145,7 @@ function handle(room, pid, isLeader, m) {
         i = free.length ? free[crypto.randomInt(free.length)] : -1;
       }
       if (i < 0) return 'Bordet er fyldt.';
-      s.seats[i] = { uid: pid, nick, chips: s.stack, rebuys: 0, inHand: false, bet: 0, total: 0, folded: false, allin: false, acted: false, hole: [], joinedAt: Date.now() };
+      s.seats[i] = { uid: pid, nick, chips: s.stack, rebuys: 0, inHand: false, bet: 0, total: 0, folded: false, allin: false, acted: false, hole: [], joinedAt: Date.now(), waitBB: s.seats.some((q) => q?.played) };
       G.buyIn(s, s.seats[i], s.stack, i);
       G.log(s, `${nick} sætter sig som ${G.CHARS[i].name}: “${G.CHARS[i].sit}”`);
       return;
