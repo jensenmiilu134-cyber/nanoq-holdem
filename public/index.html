@@ -827,19 +827,7 @@ body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   .has-actbar .app{padding-bottom:240px}
   .has-actbar .caster{bottom:230px}
 }
-/* v17: peek and the finger */
-.peekmode .seat.me .hand{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;cursor:grab;position:relative}
-.peekmode .seat.me .cw.peekc .cin{transition:transform .2s cubic-bezier(.3,.7,.3,1)}
-.peekmode.peeking .seat.me .cw.peekc.down .cin{transform:translateY(-12%) rotateX(16deg) rotateY(0deg)}
-.peekmode.peeking .seat.me .hand{cursor:grabbing}
-.peekmode:not(.peeking) .seat.me .hand::after{content:'👀 Hold for at kigge';position:absolute;left:50%;bottom:8%;transform:translateX(-50%);white-space:nowrap;background:rgba(5,10,21,.85);color:#fff;border:1px solid var(--aurora);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;pointer-events:none;z-index:5;animation:peekHint 1.6s ease-in-out infinite alternate}
-.peekmode.peeked:not(.peeking) .seat.me .hand::after{content:'👀';padding:2px 7px;animation:none;opacity:.85}
-@keyframes peekHint{to{transform:translateX(-50%) translateY(-4px)}}
-.peekmode:not(.peeking) #hud>*{visibility:hidden}
-.peekmode:not(.peeking) #hud{position:relative;cursor:grab;touch-action:none}
-.peekmode:not(.peeking) #hud::after{content:'👀 Hold på dine kort for at se din hånd';position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-weight:700}
-.peekmode:not(.peeking) .ab-cards b{color:transparent!important;background:repeating-linear-gradient(45deg,#d4122f 0 4px,#f6f9fb 4px 8px);cursor:grab}
-.ab-cards{touch-action:none;user-select:none;-webkit-user-select:none}
+/* v17: the finger */
 .finger{position:absolute;left:0;top:0;z-index:42;font-size:clamp(44px,5vw,70px);pointer-events:none;will-change:transform;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}
 .fingerbtn{margin-left:6px}
 /* v16: simpler */
@@ -1588,7 +1576,7 @@ function renderReacts(){
       :`<b>${THROWS[throwPick][0]} ${THROWS[throwPick][1]} – på hvem?</b> ${others.map(({i,p})=>`<button class="tg" data-target="${i}">${esc(p.nick)}</button>`).join('')||'<i>Ingen at kaste på endnu</i>'} <button data-throw="-1">Fortryd</button>`}</div>`)}
 
 const REACTS_SHOWN={};
-const UI={more:false,taunts:false,lb:false,lead:false,peek:true};let PEEKON=false;
+const UI={more:false,taunts:false,lb:false,lead:false};
 try{Object.assign(UI,JSON.parse(localStorage.getItem('nanoq-ui')||'{}'),{more:false})}catch{}
 function saveUI(){try{localStorage.setItem('nanoq-ui',JSON.stringify(UI))}catch{}}
 let PEND_SEAT=null;
@@ -1690,11 +1678,10 @@ function moveCamera(){
 function render(){
   document.documentElement.classList.toggle('on-landing',!joined);
   document.documentElement.classList.toggle('is-seated',joined&&mySeat()>=0);
-  {const q=S?.seats?.[mySeat()],hh=S?.hand;PEEKON=!!(UI.peek&&joined&&q&&hh&&q.inHand&&!q.folded&&hh.phase!=='showdown');document.documentElement.classList.toggle('peekmode',PEEKON);if(!PEEKON)document.documentElement.classList.remove('peeking')}
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`${s.code?`<button class="pill pill-btn invite" id="copyLink" title="Del linket til bordet">📨 Inviter venner <b>${esc(s.code)}</b></button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'🔊 Lyd':'🔇 Lyd'}</button><button class="iconbtn" id="moreBtn" aria-expanded="${UI.more}">${UI.more?'Mindre ▴':'Mere ▾'}</button>`+(UI.more?`<div class="pills-more">${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lydstyrke</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button><button class="iconbtn" id="peekBtn" aria-pressed="${UI.peek}" title="Dine kort ligger med bagsiden op, og du holder på dem for at kigge">👀 Peek ${UI.peek?'til':'fra'}</button></div>`:'');
+  $('pills').innerHTML=`${s.code?`<button class="pill pill-btn invite" id="copyLink" title="Del linket til bordet">📨 Inviter venner <b>${esc(s.code)}</b></button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'🔊 Lyd':'🔇 Lyd'}</button><button class="iconbtn" id="moreBtn" aria-expanded="${UI.more}">${UI.more?'Mindre ▴':'Mere ▾'}</button>`+(UI.more?`<div class="pills-more">${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lydstyrke</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button></div>`:'');
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   ensureCenter();
@@ -1786,11 +1773,11 @@ function render(){
       else kind='folded';}
     const newHand=M.hid!==(h?.id??null);
     const winKey=cards.map(c=>winCards.has(c)?1:0).join('');
-    const key=kind+(kind==='mine'&&PEEKON?'pk':'')+'|'+(h?.id??'')+'|'+cards.join(',')+'|'+winKey+'|'+vol.join(',');
+    const key=kind+'|'+(h?.id??'')+'|'+cards.join(',')+'|'+winKey+'|'+vol.join(',');
     if(key!==M.key){
       const STEP=.24,k=order.indexOf(i),n=order.length,d1=Math.max(0,k)*STEP,d2=(n+Math.max(0,k))*STEP;
       let html='';
-      if(kind==='mine'){const deal=newHand||M.kind==='none';html=cards.map((c,j)=>cardHTML(c,{cls:(PEEKON?(deal?'deal ':'')+'down peekc':(deal?'deal mine':(winCards.has(c)?'lift':'')))+(vol.includes(c)?' shownmark':''),dl:j?d2:d1,win:winCards.has(c)})).join('')}
+      if(kind==='mine'){const deal=newHand||M.kind==='none';html=cards.map((c,j)=>cardHTML(c,{cls:(deal?'deal mine':(winCards.has(c)?'lift':''))+(vol.includes(c)?' shownmark':''),dl:j?d2:d1,win:winCards.has(c)})).join('')}
       else if(kind==='vol'){const seen=M.kind==='vol'?(M.vol||[]):[];html=cards.map((c,j)=>cardHTML(c,{cls:seen.includes(c)?'':'reveal',dl:.05+j*.25})).join('')+(!p.folded&&cards.length<2?backHTML({}):'')}
       else if(kind==='back'){const deal=newHand||M.kind==='none';html=backHTML({cls:deal?'deal':'',dl:d1})+backHTML({cls:deal?'deal':'',dl:d2})}
       else if(kind==='shown'){const rv=M.kind!=='shown';html=cards.map((c,j)=>cardHTML(c,{cls:rv?'reveal':(winCards.has(c)?'lift':''),dl:rv?.15+j*.3:0,win:winCards.has(c)})).join('')}
@@ -2102,7 +2089,6 @@ document.addEventListener('click',e=>{
   if(t.id==='leaveBtn'){send('leave');return}
   if(t.id==='sitoutBtn'){const p=S?.seats[mySeat()];if(p)send('sitout',{on:!p.sitout});return}
   if(t.dataset.pre){const h=S?.hand;if(!h)return;PRE=PRE&&PRE.hid===h.id&&PRE.kind===t.dataset.pre?null:{hid:h.id,kind:t.dataset.pre,amt:+(t.dataset.amt||0),bet:h.curBet};ACT_KEY='';renderActbar();lastBarKey='';renderDock();return}
-  if(t.id==='peekBtn'){UI.peek=!UI.peek;saveUI();render();toast(UI.peek?'Peek er slået til: hold på dine kort for at kigge.':'Peek er slået fra: dine kort ligger altid med forsiden op.');return}
   if(t.id==='moreBtn'){UI.more=!UI.more;render();return}
   if(t.id==='fingerBtn'){const others=S.seats.map((p,i)=>p&&i!==mySeat()?i:-1).filter(i=>i>=0);
     if(others.length===1){sock.emit('react',{t:FINGER,to:others[0]});showTable();return}
@@ -2122,14 +2108,6 @@ document.addEventListener('click',e=>{
     armReset=false;send('reset');return;
   }
 });
-/* peek: hold on your cards (or the V key) to look at them */
-function setPeek(on){document.documentElement.classList.toggle('peeking',on&&PEEKON);if(on&&PEEKON&&!setPeek.seen){setPeek.seen=true;try{localStorage.setItem('nanoq-peeked','1')}catch{}document.documentElement.classList.add('peeked')}}
-try{if(localStorage.getItem('nanoq-peeked')){setPeek.seen=true;document.documentElement.classList.add('peeked')}}catch{}
-document.addEventListener('pointerdown',e=>{if(PEEKON&&e.target.closest('.seat.me .hand, .ab-cards, #hud')){e.preventDefault();setPeek(true)}});
-['pointerup','pointercancel','blur'].forEach(ev=>addEventListener(ev,()=>setPeek(false)));
-document.addEventListener('contextmenu',e=>{if(e.target.closest('.seat.me .hand, .ab-cards'))e.preventDefault()});
-document.addEventListener('keydown',e=>{if((e.key==='v'||e.key==='V')&&!e.repeat&&!/INPUT|TEXTAREA/.test(e.target.tagName))setPeek(true)});
-document.addEventListener('keyup',e=>{if(e.key==='v'||e.key==='V')setPeek(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='codeIn')$('joinBtn')?.click();if(e.key==='Enter'&&e.target.id==='nickModalIn')$('nickGo')?.click();if(e.key==='Enter'&&e.target.id==='nick')$('quickSit')?.click();
   if(e.key==='Enter'&&e.target.id==='chatIn'){e.preventDefault();sendChat();return}
   if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
