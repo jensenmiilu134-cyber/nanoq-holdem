@@ -1531,7 +1531,7 @@ function updateTanks(){const h=S?.hand;const on=h&&['preflop','flop','turn','riv
     if(t&&!e.tank.firstChild)SFX.blub();setHTML(e.tank,t?tankHTML(k):'')}}
 
 /* ---------- throwing things at each other ---------- */
-const THROWS=[['🐟','Torsk'],['❄️','Snebold'],['🦴','Tupilak'],['🧊','Isklump'],['☕','Kaffe'],['🖕','Fingeren']];const FINGER=5;
+const THROWS=[['🖕','Fingeren']];const FINGER=0;
 const THROW_FX={torsk:'SMASK!',snebold:'POF!',tupilak:'FORBANDET!',isklump:'BONK!',kaffe:'SPLASH!',finger:'FUCK DIG!'};
 const HIT={};let throwPick=-1;
 function projHTML(k){
@@ -1570,10 +1570,9 @@ function throwAnim(r){
 function renderReacts(){
   const r=$('reacts');const ms=mySeat();const sat=joined&&ms>=0&&!!S;r.hidden=!sat;if(!sat)return;
   const others=S.seats.map((p,i)=>p&&i!==ms?{i,p}:null).filter(Boolean);
-  if(!UI.taunts&&throwPick!==FINGER){setHTML(r,`<div class="rrow"><button class="btn small ghost" id="tauntBtn">😂 Taunts og kast</button><button class="btn small ghost fingerbtn" id="fingerBtn" title="Ræk fingeren til en anden spiller">🖕 Fingeren</button></div>`);return}
+  if(!UI.taunts&&throwPick!==FINGER){setHTML(r,`<div class="rrow"><button class="btn small ghost" id="tauntBtn">😂 Taunts</button><button class="btn small ghost fingerbtn" id="fingerBtn" title="Ræk fingeren til en anden spiller">🖕 Fingeren</button></div>`);return}
   setHTML(r,`<div class="rrow"><button class="btn tiny ghost" id="tauntBtn">Skjul ▴</button></div><div class="rrow"><span>Sig</span>${REACTS.map((t,i)=>`<button data-react="${i}">${esc(t)}</button>`).join('')}</div>
-    <div class="rrow"><span>Kast</span>${throwPick<0?THROWS.map(([e,n],i)=>`<button class="thr" data-throw="${i}">${e} ${n}</button>`).join('')
-      :`<b>${THROWS[throwPick][0]} ${THROWS[throwPick][1]} – på hvem?</b> ${others.map(({i,p})=>`<button class="tg" data-target="${i}">${esc(p.nick)}</button>`).join('')||'<i>Ingen at kaste på endnu</i>'} <button data-throw="-1">Fortryd</button>`}</div>`)}
+    ${throwPick>=0?`<div class="rrow"><b>🖕 Til hvem?</b> ${others.map(({i,p})=>`<button class="tg" data-target="${i}">${esc(p.nick)}</button>`).join('')} <button data-throw="-1">Fortryd</button></div>`:`<div class="rrow"><button class="btn small ghost fingerbtn" id="fingerBtn">🖕 Fingeren</button></div>`}`)}
 
 const REACTS_SHOWN={};
 const UI={more:false,taunts:false,lb:false,lead:false};
@@ -1681,7 +1680,7 @@ function render(){
   const s=S||emptyState();const h=s.hand;const ms=mySeat();
   // pills
   const seated=s.seats.filter(Boolean).length;
-  $('pills').innerHTML=`${s.code?`<button class="pill pill-btn invite" id="copyLink" title="Del linket til bordet">📨 Inviter venner <b>${esc(s.code)}</b></button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'🔊 Lyd':'🔇 Lyd'}</button><button class="iconbtn" id="moreBtn" aria-expanded="${UI.more}">${UI.more?'Mindre ▴':'Mere ▾'}</button>`+(UI.more?`<div class="pills-more">${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${s.prophecySealed?'<span class="pill" title="Afsløres, når lederen afslutter aftenen">🔮 Spådom forseglet</span>':''}${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lydstyrke</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button></div>`:'');
+  $('pills').innerHTML=`${s.code?`<button class="pill pill-btn invite" id="copyLink" title="Del linket til bordet">📨 Inviter venner <b>${esc(s.code)}</b></button>`:''}<span class="pill">Blinds <b>${s.sb}/${s.bb}</b></span><button class="iconbtn" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on?'🔊 Lyd':'🔇 Lyd'}</button><button class="iconbtn" id="moreBtn" aria-expanded="${UI.more}">${UI.more?'Mindre ▴':'Mere ▾'}</button>`+(UI.more?`<div class="pills-more">${s.jpRoyal>0||s.jp72>0?`<span class="pill jp-pill">${s.jpRoyal>0?`Royal jackpot <b>${fmt(s.jpRoyal)}</b>`:''}${s.jpRoyal>0&&s.jp72>0?' · ':''}${s.jp72>0?`7-2 <b>${fmt(s.jp72)}</b>`:''}</span>`:''}${s.rit?'<span class="pill">Run it twice <b>til</b></span>':''}<span class="pill">Ved bordet <b>${seated}/${N}</b></span>${s.watching>0?`<span class="pill">👀 <b>${s.watching}</b> ser med</span>`:''}${h?`<span class="pill">Hånd <b>#${h.no||1}</b></span>`:''}<button class="iconbtn" id="volBtn" aria-expanded="${!$('volPanel').hidden}" title="Lydindstillinger">🎚️ Lydstyrke</button><button class="iconbtn" id="tvBtn" title="TV-tilstand: kun bord og leaderboard">${TV?'Afslut TV':'📺 TV'}</button></div>`:'');
   // center
   const pot=s.seats.reduce((a,p)=>a+(p?.inHand?p.total:0),0);
   ensureCenter();
@@ -2390,9 +2389,7 @@ setInterval(()=>{if(joined)fetch('/health',{cache:'no-store'}).catch(()=>{})},4*
 sock=io({transports:['websocket','polling']});
 sock.on('connect',joinRoom);
 sock.on('disconnect',()=>{$('conn').hidden=false});
-sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);saveSnap(S);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();keepSeatVisible(S.hand&&S.hand.toAct===mySeat()&&prev?.hand?.toAct!==mySeat());handleFx(prev);turnAlert();
-  // somebody just shoved: their character makes an entrance
-  if(prev?.hand&&S.hand&&prev.hand.id===S.hand.id)S.seats.forEach((p,i)=>{if(p&&p.inHand&&p.allin&&!prev.seats[i]?.allin&&prev.seats[i]?.uid===p.uid)queueAllin(i)})});
+sock.on('state',st=>{skew=st.now-Date.now();const prev=S;S=norm(st);saveSnap(S);isOwner=!!me&&S.leader===me;joined=true;soundsFor(prev,S);runPre(prev);render();keepSeatVisible(S.hand&&S.hand.toAct===mySeat()&&prev?.hand?.toAct!==mySeat());handleFx(prev);turnAlert();});
 sock.on('connect',()=>{$('conn').hidden=true});
 sock.on('chatlog',l=>{CHAT.length=0;CHAT.push(...(l||[]));renderChat()});
 sock.on('chat',m=>{CHAT.push(m);if(CHAT.length>40)CHAT.shift();if(chatHidden&&m.seat!==mySeat())chatUnread++;
