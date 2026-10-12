@@ -309,7 +309,7 @@ io.on('connection', (sock) => {
   });
   const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemaskinen!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
     'Er du bange?', 'Fold nu bare', 'Jeg lugter bluff', 'Sikke en torsk 🐟', 'Tag dig sammen', 'Det var dumt', 'Hurtigere, bedstemor!', 'Nice hand… NOT', 'Kom så!', 'GG'];
-  const THROWS = ['torsk', 'snebold', 'tupilak', 'isklump', 'kaffe'];
+  const THROWS = ['torsk', 'snebold', 'tupilak', 'isklump', 'kaffe', 'finger'];
   let lastReact = 0;
   sock.on('react', (m) => {
     const d = sock.data || {}, room = rooms.get(d.code);
