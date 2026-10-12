@@ -37,7 +37,8 @@ function newRoom(leaderToken) {
   return room;
 }
 function pidFor(room, token) {
-  if (!room.pids.has(token)) room.pids.set(token, 'p_' + rid(10));
+  // the same browser always gets the same player id at a table, so a table can be rebuilt after a restart
+  if (!room.pids.has(token)) room.pids.set(token, 'p_' + crypto.createHash('sha256').update(room.code + ':' + token).digest('hex').slice(0, 12));
   return room.pids.get(token);
 }
 
@@ -259,6 +260,42 @@ io.on('connection', (sock) => {
     const room = newRoom(token);
     ack?.({ code: room.code });
   });
+  /* After a server restart the table is gone from memory. Any player who still has the
+     table's last snapshot in the browser can rebuild it: same code, same seats and chips. */
+  sock.on('restore', ({ code, token, snap } = {}, ack) => {
+    code = clean(code, 8).toUpperCase(); token = clean(token, 64);
+    if (!/^[A-Z0-9]{4,8}$/.test(code) || token.length < 16 || !snap || typeof snap !== 'object') return ack?.({ error: 'Kunne ikke genskabe bordet.' });
+    if (rooms.has(code)) return ack?.({ ok: true });
+    const num = (v, d) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n >= 0 && n <= 1e9 ? n : d; };
+    const okId = (v) => typeof v === 'string' && /^p_[A-Za-z0-9]{6,16}$/.test(v);
+    const s = G.emptyState();
+    s.sb = Math.max(1, num(snap.sb, 10)); s.bb = Math.max(s.sb, num(snap.bb, 20)); s.stack = Math.max(s.bb, num(snap.stack, 1000));
+    s.jpRoyal = num(snap.jpRoyal, 0); s.jp72 = num(snap.jp72, 0); s.rit = !!snap.rit;
+    s.leader = okId(snap.leader) ? snap.leader : null;
+    const used = new Set();
+    (Array.isArray(snap.seats) ? snap.seats : []).slice(0, G.N).forEach((q, i) => {
+      if (!q || !okId(q.uid) || used.has(q.uid)) return; used.add(q.uid);
+      const nick = clean(q.nick, 16); if (!nick) return;
+      s.seats[i] = { uid: q.uid, nick, chips: num(q.chips, 0), rebuys: num(q.rebuys, 0), inHand: false, bet: 0, total: 0, folded: false, allin: false, acted: false, hole: [], joinedAt: Date.now(), played: true };
+    });
+    if (snap.ledger && typeof snap.ledger === 'object') {
+      s.ledger = {};
+      for (const [uid, l] of Object.entries(snap.ledger).slice(0, 40)) if (okId(uid) && l) s.ledger[uid] = { nick: clean(l.nick, 16) || 'Spiller', seat: Math.floor(Number(l.seat)) || 0, in: Math.floor(Number(l.in)) || 0, cash: Math.floor(Number(l.cash)) || 0 };
+    }
+    if (snap.stats && typeof snap.stats === 'object' && JSON.stringify(snap.stats).length < 40000) {
+      s.stats = {};
+      for (const [uid, st] of Object.entries(snap.stats).slice(0, 40)) if (okId(uid) && st && typeof st === 'object') {
+        const o = {}; for (const [k, v] of Object.entries(st)) { if (typeof v === 'number' && Number.isFinite(v)) o[k] = v; else if (k === 'heads' && Array.isArray(v)) o.heads = v.filter(Number.isInteger).slice(0, 20); }
+        s.stats[uid] = o;
+      }
+    }
+    s.dealer = Number.isInteger(snap.dealer) && snap.dealer >= -1 && snap.dealer < G.N ? snap.dealer : -1;
+    s.lastBB = Number.isInteger(snap.lastBB) && snap.lastBB >= 0 && snap.lastBB < G.N ? snap.lastBB : -1;
+    s.log = ['Serveren blev genstartet, men bordet er genskabt med jeres chips. Spillet fortsætter, når I er tilbage.'];
+    const room = { code, s, pids: new Map(), leaderToken: null, timers: {}, touched: Date.now() };
+    rooms.set(code, room);
+    ack?.({ ok: true });
+  });
   sock.on('join', ({ code, token } = {}, ack) => {
     code = clean(code, 8).toUpperCase(); token = clean(token, 64);
     const room = rooms.get(code);
@@ -302,7 +339,7 @@ io.on('connection', (sock) => {
   sock.on('do', (m, ack) => {
     const d = sock.data || {}, room = rooms.get(d.code);
     if (!room) return ack?.({ error: 'Du er ikke ved et bord.' });
-    const err = handle(room, d.pid, d.token === room.leaderToken, m);
+    const err = handle(room, d.pid, d.pid === room.s.leader, m);
     if (err) return ack?.({ error: err });
     broadcast(room);
     ack?.({ ok: true });
