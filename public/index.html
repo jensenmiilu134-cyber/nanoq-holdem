@@ -1700,6 +1700,7 @@ function render(){
     if(p.inHand&&h){const shown=reveal?h.result?.shown?.[i]:null,op=h.open?.[i];
       if(isMe&&!p.folded){kind='mine';cards=dec(p.hole)}
       else if(shown){kind='shown';cards=shown}
+      else if(reveal&&h.result?.mucked?.includes(i))kind='folded';
       else if(op&&!p.folded){kind='shown';cards=op}
       else if(vol.length){kind='vol';cards=vol}
       else if(!p.folded)kind='back';
@@ -1727,6 +1728,7 @@ function render(){
     else if(isWin)tag=`<span class="tag ok">+${fmt(h.result.winners.find(w=>w.seat===i).amount)}</span>`;
     else if(reveal&&h.result?.names?.[i])tag=`<span class="tag ok" style="background:var(--glacier)">${esc(h.result.names[i])}</span>`;
     else if(p.sitout&&!(p.inHand&&!p.folded))tag='<span class="tag out">Sidder ude</span>';
+    else if(p.waitBB&&!p.inHand)tag='<span class="tag out">Venter på BB</span>';
     else if(p.chips===0&&!p.inHand)tag='<span class="tag">Flad</span>';
     if(reveal&&(h.result?.slow||[]).includes(i))tag+='<span class="tag slow">Dårlig stil 🐟</span>';
     setHTML(e.tag,tag+(s.dealer===i&&h?'<span class="dealer">D</span>':''));
@@ -2060,7 +2062,7 @@ function renderActbar(){
       <div class="ps-pres" role="group" aria-label="Pre-select">${need?box('cf','Fold')+box('callx',`Call ${fmt(amt)}`)+box('any','Call Any'):box('cf','Check/Fold')+box('check','Check')+box('any','Call Any')}</div></div>`;
     return}
   const toCall=Math.min(h.curBet-p.bet,p.chips);
-  const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips,canRaise=maxTo>h.curBet,slider=canRaise&&maxTo>minTo;
+  const minTo=Math.min(h.curBet+h.minRaise,p.bet+p.chips),maxTo=p.bet+p.chips,canRaise=maxTo>h.curBet&&!(p.acted&&h.curBet-(p.faced||0)<h.minRaise),slider=canRaise&&maxTo>minTo;
   const spot=`${h.id}${h.phase}${h.curBet}`;if(RAISE_FOR!==spot){RAISE_FOR=spot;RAISE_OPEN=false;FOLD_ARM=false;RAISE_V=minTo}
   RAISE_V=Math.max(minTo,Math.min(maxTo,RAISE_V||minTo));
   const key=`turn${spot}${p.bet}${busy}${RAISE_OPEN}${FOLD_ARM}${bankLeft(s,p.uid)}${h.turnAt}`;if(key===ACT_KEY&&!el.hidden)return;ACT_KEY=key;el.hidden=false;
