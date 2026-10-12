@@ -270,7 +270,7 @@ io.on('connection', (sock) => {
     sock.emit('chatlog', room.chat || []);
     broadcast(room); // tilskuer-tælleren opdateres
   });
-  const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemasking!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
+  const REACTS = ['Aluu!', 'Qujanaq', 'Mamaq!', 'Ajunngilaq', 'Malkemaskinen!', '😂', '🔥', '🤡', '🐻‍❄️', '🫡',
     'Er du bange?', 'Fold nu bare', 'Jeg lugter bluff', 'Sikke en torsk 🐟', 'Tag dig sammen', 'Det var dumt', 'Hurtigere, bedstemor!', 'Nice hand… NOT', 'Kom så!', 'GG'];
   const THROWS = ['torsk', 'snebold', 'tupilak', 'isklump', 'kaffe'];
   let lastReact = 0;

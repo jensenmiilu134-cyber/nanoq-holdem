@@ -861,7 +861,7 @@ body.myturn::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
       <div class="rule r72"><b>7-2-bonus</b><span>Vind en pulje med verdens dårligste hånd, og alle ved bordet betaler dig. Lederen bestemmer hvor meget.</span></div>
       <div class="rule rit"><b>Run it twice</b><span>Er alle all-in, kan I stemme om at dele resten af kortene to gange og dele puljen.</span></div>
     </div>
-    <p class="fine">Kun fiktive chips. Malkemasking WILL get you.</p>
+    <p class="fine">Kun fiktive chips. Malkemaskinen WILL get you.</p>
   </section>
 
   <main class="stage">
@@ -979,7 +979,7 @@ const enc=a=>btoa(a.map(c=>String.fromCharCode(c+70)).reverse().join(''));
 const dec=a=>Array.isArray(a)?a:[];
 function shuffled(){const d=[...Array(52).keys()];const r=new Uint32Array(52);crypto.getRandomValues(r);for(let i=51;i>0;i--){const j=r[i]%(i+1);[d[i],d[j]]=[d[j],d[i]]}return d}
 const chipSvg=`<svg class="chip" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9.5" fill="#d4122f"/><circle cx="10" cy="10" r="9.5" fill="none" stroke="#f6f9fb" stroke-width="3" stroke-dasharray="3 3.2"/><circle cx="10" cy="10" r="5" fill="#f6f9fb"/><path d="M5 10a5 5 0 0 1 10 0z" fill="#d4122f"/></svg>`;
-const MOTTO=`<svg class="motto" viewBox="0 0 440 70" role="img" aria-label="Malkemasking WILL get you!"><defs><path id="mottoArc" d="M0 12 Q220 76 440 12"/></defs><text class="glow" text-anchor="middle"><textPath href="#mottoArc" startOffset="50%">Malkemasking WILL get you!</textPath></text><text text-anchor="middle"><textPath href="#mottoArc" startOffset="50%">Malkemasking WILL get you!</textPath></text></svg>`;
+const MOTTO=`<svg class="motto" viewBox="0 0 440 70" role="img" aria-label="Malkemaskinen WILL get you!"><defs><path id="mottoArc" d="M0 12 Q220 76 440 12"/></defs><text class="glow" text-anchor="middle"><textPath href="#mottoArc" startOffset="50%">Malkemaskinen WILL get you!</textPath></text><text text-anchor="middle"><textPath href="#mottoArc" startOffset="50%">Malkemaskinen WILL get you!</textPath></text></svg>`;
 /* ---------- the cast: one character per seat ---------- */
 const E=(x,y,r,f)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/>`;
 const CHARS=[
@@ -991,7 +991,7 @@ const CHARS=[
   sit:'Bonjour. Jeg maler med dine chips. Mest med de røde.',allin:['Mit mesterværk hedder ALL-IN.','Jeg maler hele bordet rødt.','Kunst er at tage alt. Signeret, Puisi.'],raise:['Et strøg mere rødt.','Kubisme: jeg hæver fra alle vinkler.','Ooh la la, mere i puljen.'],fold:['Kunstnerisk pause.','Det maleri var alligevel grimt.','*tørrer penslen af i dit hår*'],win:'Signeret Puisi. Hæng det på væggen.'},
  {name:'Malkeko',title:'Ko med koklokke. Malker hele bordet.',bg:'#2f7a3a',
   svg:`<path d="M22 22 Q18 14 23 11 M42 22 Q46 14 41 11" stroke="#e9dcc0" stroke-width="3.4" fill="none" stroke-linecap="round"/><ellipse cx="13" cy="31" rx="8" ry="3.8" fill="#f4f1ea" transform="rotate(18 13 31)"/><ellipse cx="51" cy="31" rx="8" ry="3.8" fill="#f4f1ea" transform="rotate(-18 51 31)"/><ellipse cx="14" cy="31.5" rx="4.5" ry="1.8" fill="#ffb3c7" transform="rotate(18 14 31.5)"/><ellipse cx="50" cy="31.5" rx="4.5" ry="1.8" fill="#ffb3c7" transform="rotate(-18 50 31.5)"/><ellipse cx="32" cy="37" rx="15" ry="17" fill="#f4f1ea"/><path d="M20 26 Q24 21 31 24 Q30 31 23 32 Q18 31 20 26Z" fill="#1b1b1f"/><path d="M41 40 Q47 37 47 43 Q44 47 40 45Z" fill="#1b1b1f"/><path d="M24 35 Q27 32.5 30 35" stroke="#111" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M24.5 34.6 L23 32.6 M27 33.6 L27 31.4" stroke="#111" stroke-width="1.1" stroke-linecap="round"/>${E(39,34,3.4,'#fff')}${E(39.6,34.6,2,'#111')}${E(40.2,33.8,.7,'#fff')}<path d="M36.5 31 L35.6 29.2 M39.4 30.4 L39.4 28.4 M42.2 31 L43.2 29.2" stroke="#111" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="32" cy="47" rx="11" ry="7.5" fill="#ffb3c7"/><ellipse cx="28" cy="46" rx="1.8" ry="1.3" fill="#c0607a"/><ellipse cx="36" cy="46" rx="1.8" ry="1.3" fill="#c0607a"/><path d="M27 50.5 Q32 53 37 50.5" stroke="#8a3a50" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M35 51.5 Q38 57 40 52Z" fill="#ff6b8a"/><path d="M25 52.5 Q24 56 25.5 57 Q27 56 26.4 52.6" fill="#fff" stroke="#dfe8ee" stroke-width=".5"/><path d="M20 55 Q32 61 44 55" stroke="#8b5a2b" stroke-width="2.4" fill="none"/><path d="M28.5 57.5 L35.5 57.5 L37 64 L27 64Z" fill="#ffd23f"/>${E(32,64.5,1.4,'#8a5a00')}`,
-  sit:'Muuh. Jeg er her for at malke jer alle sammen.',allin:['MALKEMASKING! ALL-IN!','Fuld mælk. Fuld stak. All-in.','Muuuuh. Det betyder all-in.'],raise:['Jeg malker puljen.','Lidt mere fløde i puljen.','Muuh-raise.'],fold:['Jeg går tilbage på marken.','Mælken er sur i dag.','Jeg tygger drøv på det.'],win:'Tak for mælken. Malkemasking WILL get you!'},
+  sit:'Muuh. Jeg er her for at malke jer alle sammen.',allin:['MALKEMASKINEN! ALL-IN!','Fuld mælk. Fuld stak. All-in.','Muuuuh. Det betyder all-in.'],raise:['Jeg malker puljen.','Lidt mere fløde i puljen.','Muuh-raise.'],fold:['Jeg går tilbage på marken.','Mælken er sur i dag.','Jeg tygger drøv på det.'],win:'Tak for mælken. Malkemaskinen WILL get you!'},
  {name:'Terianniaq Trump',title:'Ræv. Siger, at hans hånd er tremendous.',bg:'#8a5a00',
   svg:`<path d="M14 30 L12 6 L28 20Z M50 30 L52 6 L36 20Z" fill="#e8742a"/><path d="M16 26 L15 12 L25 21Z M48 26 L49 12 L39 21Z" fill="#3a1d0c"/><path d="M32 18 C48 18 54 30 52 40 C50 48 40 56 32 57 C24 56 14 48 12 40 C10 30 16 18 32 18Z" fill="#e8742a"/><path d="M32 57 C24 56 15 49 13 41 C20 42 26 46 32 52 C38 46 44 42 51 41 C49 49 40 56 32 57Z" fill="#fff4e6"/><ellipse cx="32" cy="46" rx="3.8" ry="2.8" fill="#111"/><path d="M19 32 Q24 29 29 32 Q24 34 19 32Z" fill="#fff"/>${E(25.5,32,1.9,'#3a1d0c')}<path d="M18.5 31.6 Q24 28 29.5 31.6" stroke="#b5561a" stroke-width="2.2" fill="none"/><path d="M35 32 Q40 29 45 32 Q40 34 35 32Z" fill="#fff"/>${E(41.5,32,1.9,'#3a1d0c')}<path d="M34.5 31.6 Q40 28 45.5 31.6" stroke="#b5561a" stroke-width="2.2" fill="none"/><path d="M35 25 Q40 21 46 25" stroke="#3a1d0c" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M19 27 L29 27" stroke="#3a1d0c" stroke-width="1.8" stroke-linecap="round"/><path d="M27 51 Q33 53.5 39 49" stroke="#3a1d0c" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M14 58 Q32 70 50 58" stroke="#ffd23f" stroke-width="3.4" fill="none" stroke-dasharray="3 1.6"/>${E(32,64,5.4,'#ffd23f')}<text x="32" y="66" font-size="5.2" text-anchor="middle" font-weight="900" fill="#8a5a00">#1</text>`,
   sit:'Min hånd? Tremendous. Den bedste hånd i hele skoven.',allin:['Tremendous all-in. Ingen har set noget lignende.','Rævesnu. ALL-IN.','Hønsegården er min. Alle chips er mine.'],raise:['Tremendous hævning.','Rævesnu. Mere.','Det er en meget, meget god hævning.'],fold:['Det tæller ikke. Jeg var ikke klar.','Hønsegården kalder.','Jeg folder. Det var dealerens skyld.'],win:'Tremendous. Den største sejr. Måske nogensinde.'},
@@ -1414,7 +1414,7 @@ function turnAlert(){const h=S?.hand,mine=h&&h.toAct===mySeat()&&h.phase!=='show
 document.addEventListener('visibilitychange',turnAlert);
 
 /* ---------- celebrations: confetti, jackpot banners, reactions ---------- */
-const REACTS=['Aluu!','Qujanaq','Mamaq!','Ajunngilaq','Malkemasking!','😂','🔥','🤡','🐻‍❄️','🫡',
+const REACTS=['Aluu!','Qujanaq','Mamaq!','Ajunngilaq','Malkemaskinen!','😂','🔥','🤡','🐻‍❄️','🫡',
   'Er du bange?','Fold nu bare','Jeg lugter bluff','Sikke en torsk 🐟','Tag dig sammen','Det var dumt','Hurtigere, bedstemor!','Nice hand… NOT','Kom så!','GG'];
 /* ---------- all-in scenes: every character gets its own entrance ---------- */
 function critter(i,body,leg,extra=''){
@@ -1434,7 +1434,7 @@ const SCENES=[
   html:()=>Array.from({length:LITE?6:14},(_,k)=>`<i class="splat" style="left:${(k*29+5)%88}%;top:${(k*47+8)%80}%;--s:${60+(k*37)%110}px;--c:${['#e0262f','#2f8fe0','#f5c518','#e0262f','#3fbf6f','#e0262f'][k%6]};animation-delay:${.2+k*.16}s"></i>`).join('')+`<div class="bigav frame">${avatar(1)}</div>`,
   sfx(){for(let k=0;k<8;k++)SFX.noise(.12,380,1,.5,.2+k*.32);SFX.slide(500,900,.25,.08,'triangle',2.7);SFX.slide(900,600,.35,.08,'triangle',2.95)}},
  { // Malkeko
-  t:'MALKEMASKING!',small:1,glow:'#ffffff',bg:'linear-gradient(180deg,rgba(47,122,58,.55),rgba(5,10,21,.85))',
+  t:'MALKEMASKINEN!',small:1,glow:'#ffffff',bg:'linear-gradient(180deg,rgba(47,122,58,.55),rgba(5,10,21,.85))',
   html:()=>`<div class="bigav">${avatar(2)}</div>`+Array.from({length:LITE?8:24},(_,k)=>`<i class="drop" style="left:${10+(k*31)%80}%;--dx:${((k*47)%60)-30}vw;animation-delay:${.8+(k%6)*.08}s;background:#fff"></i>`).join('')+rain(['🥛','🐄','🧀','🍼'],36,1.7,24),
   sfx(){SFX.slide(230,150,1.1,.22,'sawtooth');SFX.slide(150,120,.6,.18,'sawtooth',1.05);[0,.45,.9,1.35].forEach(d=>{SFX.tone(1180,.4,.06,1.8+d,'triangle');SFX.tone(1770,.25,.03,1.8+d,'triangle')})}},
  { // Terianniaq Trump
@@ -1881,7 +1881,7 @@ function titlesFor(s,ids){const st=s.stats||{},T={},add=(uid,n,why)=>(T[uid]=T[u
   {let b=null,v=1;ids.forEach(u=>{const x=st[u]||{};if((x.hands||0)>=10){const q=(x.raises||0)/x.hands;if(q<v){v=q;b=u}}});
     if(b)add(b,'🧊 Isbjerget',`Raiser sjældnest ved bordet (${Math.round(v*100)}% af hænderne). Kold som is.`)}
   if(r=best(x=>x.tank||0,4999))add(r[0],'👻 Qivittoq',`Længst tid i tanken: ${Math.round(r[1]/1000)} sek.`);
-  if(r=best(x=>x.ouch?.amt||0,0))add(r[0],'😱 Malkemasking-offer',`Tabte ${fmt(r[1])} med ${(st[r[0]].ouch.hand)||'en kæmpe hånd'}`);
+  if(r=best(x=>x.ouch?.amt||0,0))add(r[0],'😱 Malkemaskinens offer',`Tabte ${fmt(r[1])} med ${(st[r[0]].ouch.hand)||'en kæmpe hånd'}`);
   ids.forEach(u=>{const n=st[u]?.slow||0;if(n>0)add(u,'Dårlig stil 🐟',`Har slow-rollet ${n} gang${n>1?'e':''}`)});
   return T}
 
@@ -2163,7 +2163,7 @@ const MUS={
 const CAST={
   ape:['Ajorpoq! {n} callede med skrald. Det er en abe, mine damer og herrer!','Bananer til {n}! Det call kommer på årets værste-liste.','{n} kiggede på kortene og tænkte: Hvorfor ikke? Dum abe!'],
   gambler:['{n} skubber det hele ind på ren bøn. Know when to fold them!','Cowboy-tid! {n} går all-in med næsten ingenting.'],
-  milk:['{n} er blevet malket. Muuuuh!','Malkemasking! {n} afleverede hele mælkespanden.','{n} blev malket som en ko på en sommerdag.'],
+  milk:['{n} er blevet malket. Muuuuh!','Malkemaskinen! {n} afleverede hele mælkespanden.','{n} blev malket som en ko på en sommerdag.'],
   shaman:['Shamanen har set ind i fremtiden. Spådommen er forseglet til aftenens afslutning.'],
   seal:['Min-raise igen? {n}, du er en nærig sæl!'],
   bomb:['{n} smed en atombombe for at vinde et par blinds. Pft.'],
